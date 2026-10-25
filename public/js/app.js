@@ -92,6 +92,7 @@ function paginaInicio() {
     <section class="banner secao-escura">
       <div class="wrap">
         <div>
+          <img class="logo-grande" src="assets/logo.jpg" alt="Mats & Mouse Pads Empire" width="1000" height="318">
           <p class="sobretitulo">Produtos personalizados</p>
           <h1>Sua ideia. Sua imagem. <span class="destaque">Seu produto.</span></h1>
           <p class="lead">Crie mousepads com a sua personalidade e personalize tapetes com a foto do seu melhor amigo.</p>
