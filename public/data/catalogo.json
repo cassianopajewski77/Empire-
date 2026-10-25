@@ -30,45 +30,48 @@
       "modelos": [
         {
           "id": "p",
-          "nome": "Mousepad P",
+          "nome": "Mousepad Compacto",
           "descricao": "Feito de retalho de tapete superabsorvente.",
           "dimensoes": {
             "larguraCm": 22,
             "alturaCm": 18,
             "rotulo": "22 × 18 cm"
           },
-          "preco": 19.90,
+          "preco": 19.9,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
-          "imagens": []
+          "imagens": [],
+          "linha": "Compacto"
         },
         {
           "id": "m",
-          "nome": "Mousepad M",
+          "nome": "Mousepad Standard",
           "descricao": "Feito de retalho de tapete superabsorvente.",
           "dimensoes": {
             "larguraCm": 30,
             "alturaCm": 25,
             "rotulo": "30 × 25 cm"
           },
-          "preco": 24.90,
+          "preco": 24.9,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
-          "imagens": []
+          "imagens": [],
+          "linha": "Standard"
         },
         {
           "id": "g",
-          "nome": "Desk pad G",
+          "nome": "Desk pad Extended",
           "descricao": "Peça inteira de material novo, só por encomenda.",
           "dimensoes": {
             "larguraCm": 90,
             "alturaCm": 40,
             "rotulo": "90 × 40 cm"
           },
-          "preco": 109.90,
+          "preco": 109.9,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
-          "imagens": []
+          "imagens": [],
+          "linha": "Extended"
         }
       ]
     },
@@ -94,7 +97,7 @@
             "alturaCm": 40,
             "rotulo": "40 × 60 cm"
           },
-          "preco": 69.90,
+          "preco": 69.9,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
           "imagens": [],
@@ -111,7 +114,7 @@
             "alturaCm": 40,
             "rotulo": "40 × 60 cm"
           },
-          "preco": 69.90,
+          "preco": 69.9,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
           "imagens": [],
@@ -124,31 +127,471 @@
   ],
   "artes": [
     {
-      "id": "neon-gamer",
-      "nome": "Neon Gamer",
-      "tema": "Jogos",
-      "imagem": "assets/artes/neon-gamer.jpg",
+      "id": "cyber-empire",
+      "nome": "Cyber Empire",
+      "colecao": "gamer",
+      "descricao": "Arte futurista em preto e ciano, com linhas de energia e geometria abstrata.",
+      "imagem": "assets/artes/cyber-empire.jpg",
+      "miniatura": "assets/artes/miniaturas/cyber-empire.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
       "publicado": true
     },
     {
-      "id": "alviverde",
-      "nome": "Alviverde Coxa",
-      "tema": "Futebol",
-      "imagem": "assets/artes/alviverde.jpg",
+      "id": "dragao",
+      "nome": "Dragão",
+      "colecao": "gamer",
+      "descricao": "Dragão fantástico original sobre nuvens, com lua ao fundo.",
+      "imagem": "assets/artes/dragao.jpg",
+      "miniatura": "assets/artes/miniaturas/dragao.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
       "publicado": true
     },
     {
-      "id": "ceu-pastel",
-      "nome": "Céu Pastel",
-      "tema": "Ilustração",
-      "imagem": "assets/artes/ceu-pastel.jpg",
+      "id": "galaxia",
+      "nome": "Galáxia",
+      "colecao": "natureza",
+      "descricao": "Nebulosas e estrelas em composição panorâmica.",
+      "imagem": "assets/artes/galaxia.jpg",
+      "miniatura": "assets/artes/miniaturas/galaxia.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
       "publicado": true
     },
     {
-      "id": "abstrato",
-      "nome": "Abstrato Empire",
-      "tema": "Arte abstrata",
-      "imagem": "assets/artes/abstrato.jpg",
+      "id": "topografico",
+      "nome": "Topográfico",
+      "colecao": "minimalista",
+      "descricao": "Linhas topográficas minimalistas em preto e cinza.",
+      "imagem": "assets/artes/topografico.jpg",
+      "miniatura": "assets/artes/miniaturas/topografico.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "pet-lovers",
+      "nome": "Pet Lovers",
+      "colecao": "pets",
+      "descricao": "Cães, gatos, patinhas e corações em traço original.",
+      "imagem": "assets/artes/pet-lovers.jpg",
+      "miniatura": "assets/artes/miniaturas/pet-lovers.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "minimalista",
+      "nome": "Minimalista",
+      "colecao": "minimalista",
+      "descricao": "Fundo escuro com linhas finas e composição limpa.",
+      "imagem": "assets/artes/minimalista.jpg",
+      "miniatura": "assets/artes/miniaturas/minimalista.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "retro-wave",
+      "nome": "Retro Wave",
+      "colecao": "gamer",
+      "descricao": "Pôr do sol estilizado, gradientes retrô e grade neon.",
+      "imagem": "assets/artes/retro-wave.jpg",
+      "miniatura": "assets/artes/miniaturas/retro-wave.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "arte-oriental",
+      "nome": "Arte Oriental",
+      "colecao": "natureza",
+      "descricao": "Paisagem original de montanhas, sol vermelho e pagode.",
+      "imagem": "assets/artes/arte-oriental.jpg",
+      "miniatura": "assets/artes/miniaturas/arte-oriental.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "mapa-mundi",
+      "nome": "Mapa Mundi",
+      "colecao": "escritorio",
+      "descricao": "Mapa estilizado em pontos, com destaque em ciano.",
+      "imagem": "assets/artes/mapa-mundi.jpg",
+      "miniatura": "assets/artes/miniaturas/mapa-mundi.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "marmore",
+      "nome": "Mármore",
+      "colecao": "escritorio",
+      "descricao": "Textura de mármore preto com veios claros e ciano.",
+      "imagem": "assets/artes/marmore.jpg",
+      "miniatura": "assets/artes/miniaturas/marmore.jpg",
+      "provisoria": true,
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    }
+  ],
+  "colecoes": [
+    {
+      "id": "gamer",
+      "nome": "Gamer"
+    },
+    {
+      "id": "escritorio",
+      "nome": "Escritório"
+    },
+    {
+      "id": "pets",
+      "nome": "Pets"
+    },
+    {
+      "id": "natureza",
+      "nome": "Natureza"
+    },
+    {
+      "id": "minimalista",
+      "nome": "Minimalista"
+    }
+  ],
+  "_leiaArtes": "Artes da loja. 'provisoria': true mostra o selo 'Arte provisória' (imagem de demonstração). Para trocar pela arte final: coloque o arquivo em public/assets/artes/ (JPG, de preferência 4500 × 2000 px para o Extended), atualize 'imagem' e 'miniatura' e mude 'provisoria' para false. 'modelos' diz em quais tamanhos a arte é oferecida (p, m, g).",
+  "_leiaTimes": "Mousepads de times. Escudos e marcas dos clubes são protegidos: só mude 'licenciado' para true e preencha 'imagem', 'miniatura' e 'licenca' quando a loja tiver a arte oficial e a autorização do clube. Sem isso, o site mostra a arte genérica e o time não pode ser comprado. 'observacaoInterna' não aparece no site.",
+  "timesArteProvisoria": {
+    "imagem": "assets/artes/futebol-generico.jpg",
+    "miniatura": "assets/artes/miniaturas/futebol-generico.jpg"
+  },
+  "times": [
+    {
+      "id": "coritiba",
+      "nome": "Coritiba",
+      "estado": "PR",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "athletico-paranaense",
+      "nome": "Athletico Paranaense",
+      "estado": "PR",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "parana-clube",
+      "nome": "Paraná Clube",
+      "estado": "PR",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "flamengo",
+      "nome": "Flamengo",
+      "estado": "RJ",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "corinthians",
+      "nome": "Corinthians",
+      "estado": "SP",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "palmeiras",
+      "nome": "Palmeiras",
+      "estado": "SP",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "sao-paulo",
+      "nome": "São Paulo",
+      "estado": "SP",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "santos",
+      "nome": "Santos",
+      "estado": "SP",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "gremio",
+      "nome": "Grêmio",
+      "estado": "RS",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "internacional",
+      "nome": "Internacional",
+      "estado": "RS",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "atletico-mineiro",
+      "nome": "Atlético Mineiro",
+      "estado": "MG",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "cruzeiro",
+      "nome": "Cruzeiro",
+      "estado": "MG",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "vasco",
+      "nome": "Vasco",
+      "estado": "RJ",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "botafogo",
+      "nome": "Botafogo",
+      "estado": "RJ",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "fluminense",
+      "nome": "Fluminense",
+      "estado": "RJ",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "bahia",
+      "nome": "Bahia",
+      "estado": "BA",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "sport-recife",
+      "nome": "Sport Recife",
+      "estado": "PE",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
+      "publicado": true
+    },
+    {
+      "id": "fortaleza",
+      "nome": "Fortaleza",
+      "estado": "CE",
+      "imagem": null,
+      "miniatura": null,
+      "licenciado": false,
+      "licenca": null,
+      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "modelos": [
+        "p",
+        "m",
+        "g"
+      ],
       "publicado": true
     }
   ]

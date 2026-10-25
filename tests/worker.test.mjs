@@ -90,7 +90,7 @@ test("valida o pedido e calcula o total com os preços do catálogo, ignorando o
   const r = validarPedido(pedidoBase(), catalogoComPrecos(), lojaReal);
   assert.equal(r.pedido.valores.total, 40 * 2 + 80);
   assert.equal(r.pedido.itens[0].precoUnitario, 40);
-  assert.equal(r.pedido.itens[0].modeloNome, "Mousepad M");
+  assert.equal(r.pedido.itens[0].modeloNome, "Mousepad Standard");
   assert.equal(r.pedido.cliente.aceitaWhatsApp, true);
   const semPreco = catalogoComPrecos();
   semPreco.produtos[1].modelos[0].preco = null;
@@ -188,7 +188,7 @@ test("pagamento aprovado confirma o pedido e manda o espelho no WhatsApp uma vez
   const params = msg.template.components[0].parameters.map(p => p.text);
   assert.equal(params[0], "Cliente");
   assert.equal(params[1], "EMP-ABC234");
-  assert.match(params[2], /2× Mousepad personalizado: Mousepad M 30 × 25 cm \(Arte da loja: Neon Gamer\)/);
+  assert.match(params[2], /2× Mousepad personalizado: Mousepad Standard 30 × 25 cm \(Arte da loja: Neon Gamer\)/);
   assert.match(params[3], /R\$\s160,00/);
   assert.match(params[4], /Rua XV, 10/);
   // consultar de novo ou receber o aviso do Mercado Pago não repete a mensagem

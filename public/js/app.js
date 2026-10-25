@@ -1,6 +1,6 @@
 // Mats & Mouse Pads Empire — rotas e páginas.
 import { brl, esc, avisar, DISPONIBILIDADE } from "./util.js";
-import { carregarDados, produtosPublicados, acharProduto, acharModelo, artesPublicadas, podeComprar } from "./dados.js";
+import { carregarDados, produtosPublicados, acharProduto, acharModelo, artesPublicadas, timesPublicados, nomeColecao, podeComprar } from "./dados.js";
 import * as carrinho from "./carrinho.js";
 import { Personalizador, carregarImagem } from "./personalizador.js";
 import { montarPedido, codigoPedido, STATUS, podeMudarStatus } from "./pedidos.js";
@@ -57,7 +57,7 @@ function midiaModelo(produto, modelo, indice = 0) {
   if (produto.personalizacao.permiteArtes) {
     const artes = artesPublicadas(dados.catalogo);
     const arte = artes[indice % (artes.length || 1)];
-    if (arte) return `<img src="${esc(arte.imagem)}" alt="Exemplo de mousepad com a arte ${esc(arte.nome)}" loading="lazy">`;
+    if (arte) return `<img src="${esc(arte.miniatura || arte.imagem)}" alt="Exemplo de mousepad com a arte ${esc(arte.nome)}" loading="lazy">`;
   }
   return `<div class="placeholder-midia">${iconePet}<span>Imagem de referência em breve</span></div>`;
 }
@@ -181,6 +181,131 @@ function paginaComoFunciona() {
     </div>`;
 }
 
+// ---------------------------------------------------------------- artes da loja e times
+function modelosOferecidos(item) {
+  const mp = acharProduto(dados.catalogo, "mousepad");
+  if (!mp) return [];
+  return mp.modelos.filter(m => podeComprar(m) && (!Array.isArray(item.modelos) || item.modelos.includes(m.id)));
+}
+
+function textoPrecoDesde(modelos) {
+  const precos = modelos.map(m => m.preco).filter(v => typeof v === "number");
+  if (!precos.length) return "Preço a definir";
+  return precos.length === modelos.length && new Set(precos).size === 1 ? brl(precos[0]) : `A partir de ${brl(Math.min(...precos))}`;
+}
+
+const tamanhosTexto = modelos => modelos.map(m => `${m.linha || m.nome} ${m.dimensoes.rotulo}`).join(" · ");
+
+function paginaArtes() {
+  titulo("Escolher arte da loja");
+  const artes = artesPublicadas(dados.catalogo).filter(a => !a.id.startsWith("time-"));
+  const colecoes = (dados.catalogo.colecoes || []).filter(c => artes.some(a => a.colecao === c.id));
+  const estado = { colecao: "", busca: "" };
+  main.innerHTML = `
+    <div class="wrap cabecalho-pagina">
+      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / <a href="#/mousepads">Mousepads</a> / Artes da loja</nav>
+      <h1>Escolher arte da loja</h1>
+      <p>Escolha uma arte e depois o tamanho: Compacto, Standard ou Extended. Prefere usar a sua foto? <a href="#/personalizar/mousepad/m?fonte=upload">Enviar minha imagem</a>.</p>
+      ${artes.some(a => a.provisoria) ? `<p class="aviso aviso-info" style="max-width:46em"><strong>Artes provisórias</strong>As imagens marcadas como provisórias são demonstrações dos conceitos da coleção. A arte final pode ter pequenas diferenças.</p>` : ""}
+    </div>
+    <div class="wrap" style="padding-bottom:48px">
+      <div class="filtros" role="search">
+        <label class="sr-only" for="busca-arte">Buscar arte</label>
+        <input id="busca-arte" type="search" placeholder="Buscar arte" data-busca autocomplete="off">
+        <div class="chips" role="group" aria-label="Filtrar por coleção">
+          <button type="button" class="chip" aria-pressed="true" data-colecao="">Todas</button>
+          ${colecoes.map(c => `<button type="button" class="chip" aria-pressed="false" data-colecao="${esc(c.id)}">${esc(c.nome)}</button>`).join("")}
+        </div>
+      </div>
+      <p class="contagem" data-contagem aria-live="polite"></p>
+      <div class="grade grade-artes" data-grade></div>
+    </div>`;
+
+  const grade = main.querySelector("[data-grade]");
+  const desenhar = () => {
+    const termo = estado.busca.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const lista = artes.filter(a => (!estado.colecao || a.colecao === estado.colecao) &&
+      (!termo || `${a.nome} ${a.descricao || ""} ${nomeColecao(dados.catalogo, a.colecao)}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(termo)));
+    main.querySelector("[data-contagem]").textContent = `${lista.length} ${lista.length === 1 ? "arte" : "artes"}`;
+    grade.innerHTML = lista.length ? lista.map(a => {
+      const modelos = modelosOferecidos(a);
+      const padrao = modelos.find(m => m.id === "m") || modelos[0];
+      return `<article class="cartao cartao-arte">
+        <div class="midia"><img src="${esc(a.miniatura || a.imagem)}" alt="Arte ${esc(a.nome)}" loading="lazy" width="720" height="320">${a.provisoria ? `<span class="selo-provisoria">Arte provisória</span>` : ""}</div>
+        <div class="corpo">
+          <p class="colecao">${esc(nomeColecao(dados.catalogo, a.colecao))}</p>
+          <h2>${esc(a.nome)}</h2>
+          ${a.descricao ? `<p class="descricao">${esc(a.descricao)}</p>` : ""}
+          <p class="tamanhos">${esc(tamanhosTexto(modelos))}</p>
+          <p class="preco">${esc(textoPrecoDesde(modelos))}</p>
+          ${padrao ? `<a class="btn btn-primario btn-bloco" href="#/personalizar/mousepad/${esc(padrao.id)}?arte=${encodeURIComponent(a.id)}">Escolher esta arte</a>` : `<p class="aviso">Indisponível no momento.</p>`}
+        </div>
+      </article>`;
+    }).join("") : `<div class="vazio"><p>Nenhuma arte encontrada.</p></div>`;
+  };
+  main.querySelector("[data-busca]").addEventListener("input", e => { estado.busca = e.target.value.trim(); desenhar(); });
+  main.querySelectorAll("[data-colecao]").forEach(b => b.addEventListener("click", () => {
+    estado.colecao = b.dataset.colecao;
+    main.querySelectorAll("[data-colecao]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    desenhar();
+  }));
+  desenhar();
+}
+
+function paginaTimes() {
+  titulo("Mousepads de times");
+  const times = timesPublicados(dados.catalogo);
+  const whats = String(dados.loja.pedidos?.whatsapp || "").replace(/\D/g, "");
+  const estado = { busca: "", time: "" };
+  main.innerHTML = `
+    <div class="wrap cabecalho-pagina">
+      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / <a href="#/mousepads">Mousepads</a> / Times de futebol</nav>
+      <h1>Mousepads de times de futebol</h1>
+      <p>Os principais times do Brasil, nos tamanhos Compacto, Standard e Extended.</p>
+      <p class="aviso aviso-info" style="max-width:46em"><strong>Sobre escudos e marcas</strong>Escudos, nomes estilizados e uniformes pertencem aos clubes. A loja só vende a arte de um time depois de ter a autorização. Até lá, os cartões mostram uma arte genérica de futebol e o time aparece como "Em breve".</p>
+    </div>
+    <div class="wrap" style="padding-bottom:48px">
+      <div class="filtros" role="search">
+        <label class="sr-only" for="busca-time">Buscar time</label>
+        <input id="busca-time" type="search" placeholder="Buscar time" data-busca autocomplete="off">
+        <label class="sr-only" for="filtro-time">Filtrar por clube</label>
+        <select id="filtro-time" data-time>
+          <option value="">Todos os clubes (${times.length})</option>
+          ${times.map(t => `<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join("")}
+        </select>
+      </div>
+      <p class="contagem" data-contagem aria-live="polite"></p>
+      <div class="grade grade-artes" data-grade></div>
+    </div>`;
+
+  const grade = main.querySelector("[data-grade]");
+  const semAcento = t => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const desenhar = () => {
+    const lista = times.filter(t => (!estado.time || t.id === estado.time) && (!estado.busca || semAcento(`${t.nome} ${t.estado}`).includes(semAcento(estado.busca))));
+    main.querySelector("[data-contagem]").textContent = `${lista.length} ${lista.length === 1 ? "time" : "times"}`;
+    grade.innerHTML = lista.length ? lista.map(t => {
+      const modelos = modelosOferecidos(t);
+      const padrao = modelos.find(m => m.id === "m") || modelos[0];
+      const aviso = `https://wa.me/${whats}?text=${encodeURIComponent(`Olá! Quero ser avisado quando o mousepad do ${t.nome} estiver disponível.`)}`;
+      return `<article class="cartao cartao-arte cartao-time" data-time-id="${esc(t.id)}">
+        <div class="midia"><img src="${esc(t.miniatura)}" alt="${t.oficial ? `Arte oficial do ${esc(t.nome)}` : "Arte genérica de campo de futebol, sem escudo"}" loading="lazy" width="720" height="320">
+          ${t.oficial ? "" : `<span class="nome-sobre">${esc(t.nome)}</span><span class="selo-provisoria">Arte provisória · sem escudo</span>`}</div>
+        <div class="corpo">
+          <p class="colecao">Futebol · ${esc(t.estado || "")}</p>
+          <h2>${esc(t.nome)}</h2>
+          <p class="tamanhos">${esc(tamanhosTexto(modelos))}</p>
+          ${t.oficial && padrao
+            ? `<p class="preco">${esc(textoPrecoDesde(modelos))}</p><a class="btn btn-primario btn-bloco" href="#/personalizar/mousepad/${esc(padrao.id)}?arte=${encodeURIComponent("time-" + t.id)}">Escolher este time</a>`
+            : `<p class="preco">Em breve</p>${whats ? `<a class="btn btn-contorno btn-bloco" target="_blank" rel="noopener" href="${esc(aviso)}">Avise-me pelo WhatsApp</a>` : ""}`}
+        </div>
+      </article>`;
+    }).join("") : `<div class="vazio"><p>Nenhum time encontrado.</p></div>`;
+  };
+  main.querySelector("[data-busca]").addEventListener("input", e => { estado.busca = e.target.value.trim(); desenhar(); });
+  main.querySelector("[data-time]").addEventListener("change", e => { estado.time = e.target.value; desenhar(); });
+  desenhar();
+}
+
 function paginaCatalogo() {
   titulo("Catálogo");
   const produtos = produtosPublicados(dados.catalogo);
@@ -217,7 +342,8 @@ function paginaCategoria(produtoId) {
         <p>Tapete exclusivo para <strong>cães e gatos</strong>, personalizado com a foto do seu animal.</p>
         <p><span class="etiqueta">Tamanho único: 40 × 60 cm</span></p>
         <p class="aviso aviso-info" style="max-width:40em">Para personalizar, você vai precisar de uma foto do seu cão ou gato. Fotos nítidas e bem iluminadas dão o melhor resultado.</p>`
-      : `<p>Escolha o tamanho, use uma das artes da loja ou envie a sua imagem: jogos, fotos, paisagens, pets, ilustrações ou arte abstrata.</p>`}
+      : `<p>Escolha o tamanho, use uma das artes da loja ou envie a sua imagem: jogos, fotos, paisagens, pets, ilustrações ou arte abstrata.</p>
+        <div class="acoes-linha"><a class="btn btn-primario" href="#/artes">Escolher arte da loja</a><a class="btn btn-contorno" href="#/personalizar/mousepad/m?fonte=upload">Enviar minha imagem</a><a class="btn btn-texto" href="#/times">Mousepads de times</a></div>`}
     </div>
     <div class="wrap" style="padding-bottom:48px">
       <h2 class="sr-only">Modelos</h2>
@@ -225,7 +351,7 @@ function paginaCategoria(produtoId) {
     </div>`;
 }
 
-async function paginaPersonalizar(produtoId, modeloId) {
+async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchParams()) {
   const p = acharProduto(dados.catalogo, produtoId);
   const m = acharModelo(p, modeloId);
   if (!p || !m) {
@@ -283,7 +409,9 @@ async function paginaPersonalizar(produtoId, modeloId) {
       rotuloUpload: pet ? "Foto do seu cão ou gato" : "Sua imagem",
       mensagemSemUpload: pet ? "Envie uma foto do seu cão ou gato para continuar." : undefined,
     },
-    artes: p.personalizacao.permiteArtes ? artesPublicadas(dados.catalogo) : [],
+    artes: p.personalizacao.permiteArtes ? artesPublicadas(dados.catalogo, m.id) : [],
+    arteInicial: params.get("arte") || undefined,
+    fonteInicial: params.get("fonte") || undefined,
     upload: dados.loja.upload,
     legenda: `${pet ? m.nome + " · " : ""}${m.dimensoes.rotulo}`,
     moldura,
@@ -291,8 +419,11 @@ async function paginaPersonalizar(produtoId, modeloId) {
   });
   personalizadorAtivo = pz;
 
+  // Trocar o tamanho mantém a arte escolhida (ou a opção de enviar imagem).
   main.querySelectorAll("input[name=modelo]").forEach(r => r.addEventListener("change", () => {
-    location.hash = `#/personalizar/${p.id}/${r.value}`;
+    const est = pz.estado();
+    const q = est.fonte === "arte" && est.arte ? `?arte=${encodeURIComponent(est.arte.id)}` : est.fonte === "upload" ? "?fonte=upload" : "";
+    location.hash = `#/personalizar/${p.id}/${r.value}${q}`;
   }));
   const qtd = main.querySelector("[data-quantidade]");
   main.querySelectorAll("[data-qtd]").forEach(b => b.addEventListener("click", () => {
@@ -970,8 +1101,9 @@ function pagina404() {
 
 // ---------------------------------------------------------------- roteador
 async function rotear() {
-  const rota = location.hash.replace(/^#/, "") || "/";
+  const [rota, consulta = ""] = (location.hash.replace(/^#/, "") || "/").split("?");
   const partes = rota.split("/").filter(Boolean);
+  const params = new URLSearchParams(consulta);
   personalizadorAtivo?.destruir();
   personalizadorAtivo = null;
   pararConsultaPix();
@@ -993,7 +1125,9 @@ async function rotear() {
     case "catalogo": paginaCatalogo(); break;
     case "mousepads": paginaCategoria("mousepad"); break;
     case "tapetes-pet": paginaCategoria("tapete-pet"); break;
-    case "personalizar": await paginaPersonalizar(partes[1], partes[2]); break;
+    case "personalizar": await paginaPersonalizar(partes[1], partes[2], params); break;
+    case "artes": paginaArtes(); break;
+    case "times": paginaTimes(); break;
     case "carrinho": paginaCarrinho(); break;
     case "checkout": partes[1] === "revisao" ? paginaRevisao() : paginaCheckout(); break;
     case "pedido": paginaPedido(); break;

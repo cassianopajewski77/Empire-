@@ -33,6 +33,8 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Envio do pedido | O pedido é registrado no servidor da loja e aparece no painel. O cliente ainda envia as imagens pelo WhatsApp (41) 99690-7357. |
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
+| Artes da galeria | 10 conceitos originais (Cyber Empire, Dragão, Galáxia, Topográfico, Pet Lovers, Minimalista, Retro Wave, Arte Oriental, Mapa Mundi, Mármore) gerados por programa como demonstração, com o selo "Arte provisória". Nenhum é recorte do cartaz de referência. Precisam ser trocados pelas artes finais (ver README). |
+| Times de futebol | 18 clubes cadastrados (Coritiba, Athletico Paranaense e Paraná Clube primeiro), todos com `licenciado: false`: arte genérica sem escudo, "Em breve" e fora de venda até haver arte oficial e autorização. |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
 
 ## 4. Status de pedido
@@ -71,28 +73,30 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 1. Cadastrar na Cloudflare os segredos `MP_ACCESS_TOKEN` e `ADMIN_SENHA` (contas do Cassiano, adulto responsável).
 2. Para o envio automático: conta da Meta, modelos aprovados e os segredos `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` (passo a passo no README).
 3. Cadastrar descrição e imagem de referência dos Modelos Clássico e Divertido.
+4. Trocar as 10 artes provisórias pelas artes finais.
+5. Para vender times: arte oficial e autorização de cada clube, e marcar `licenciado: true`.
 
 ## 8. Testes
 
-`npm test` roda 13 testes do servidor (`tests/worker.test.mjs`) e 16 cenários no Chromium em tela de celular:
+`npm test` roda 13 testes do servidor (`tests/worker.test.mjs`) e 18 cenários no Chromium em tela de celular:
 
-1. Página inicial com marca, chamadas e categorias.
+1. Página inicial com a primeira dobra (desk pad e tapete pet) e os botões.
 2. Mousepad com arte pronta, sem enviar imagem.
 3. Mousepad com imagem própria, zoom, setas e arrastar.
 4. Tapete pet sem foto: o site bloqueia e mostra a mensagem.
 5. Tapete pet com foto, incluindo a troca da foto antes de adicionar.
 6. Dois mousepads iguais com imagens diferentes ficam separados, e mudar um não altera o outro.
-7. Quantidades recalculam subtotal e total (com preço de teste injetado só no teste).
+7. Quantidades recalculam subtotal e total.
 8. Arquivo inválido, grande demais ou corrompido é recusado com mensagem.
 9. Remover itens até o carrinho ficar vazio.
 10. Checkout valida os campos, mantém os dados ao voltar e cria o pedido em "Aguardando pagamento", sem confirmar pagamento.
-11. Nenhuma página tem rolagem horizontal no celular.
+11. Nenhuma página tem rolagem horizontal no celular (inclui galeria e times).
 12. CEP preenche o endereço (com o ViaCEP simulado), avisa CEP inexistente e CEP geral de cidade.
-13. Pix pelo Mercado Pago (simulado): e-mail obrigatório, QR Code com o valor do servidor, sem cobrança duplicada ao recarregar, e confirmação automática quando o pagamento é aprovado.
+13. Pix pelo Mercado Pago (simulado): e-mail obrigatório, QR Code com o valor do servidor, sem cobrança duplicada ao recarregar, e confirmação automática.
 14. Pix sem preço definido: avisa e manda combinar pelo WhatsApp.
 15. Painel: senha, confirmação manual, rastreio, mensagens no WhatsApp (simuladas) e rastreio na página do cliente.
-16. Nenhum erro de JavaScript.
+16. Galeria de artes: 10 artes com selo provisório, filtro por coleção, busca, escolha da arte, troca de tamanho mantendo a arte e proporção da prévia em cada tamanho, arte certa no carrinho.
+17. Times: 18 clubes com Coritiba, Athletico Paranaense e Paraná Clube, filtro por clube, nenhum escudo, times sem licença fora de venda.
+18. Nenhum erro de JavaScript.
 
-Resultado em 25/10/2026: 13 de 13 e 16 de 16 passaram.
-
-A especificação recebida terminou no "Cenário 7 — Arquivo inválido". Se havia mais cenários ou seções depois disso, eles ainda não foram implementados.
+Resultado em 25/10/2026: 13 de 13 e 18 de 18 passaram (três rodadas seguidas).

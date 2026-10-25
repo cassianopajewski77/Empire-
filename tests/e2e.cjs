@@ -134,16 +134,16 @@ async function cenario(nome, fn) {
   await cenario("1. Mousepad com arte pronta, sem enviar imagem", async () => {
     await irPara("#/personalizar/mousepad/m");
     await page.click("label.opcao:has(input[value=arte])");
-    await page.click("label.opcao-arte:has(input[value=neon-gamer])");
+    await page.click("label.opcao-arte:has(input[value=cyber-empire])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
     await page.click("[data-adicionar]");
     await page.waitForURL(/#\/carrinho/);
     const itens = await itensCarrinho();
     assert.equal(itens.length, 1);
     assert.equal(itens[0].personalizacao.fonte, "arte");
-    assert.equal(itens[0].personalizacao.arte.id, "neon-gamer");
+    assert.equal(itens[0].personalizacao.arte.id, "cyber-empire");
     assert.equal(await page.locator(".item").count(), 1);
-    assert.match(await page.textContent(".item"), /Arte da loja: Neon Gamer/);
+    assert.match(await page.textContent(".item"), /Arte da loja: Cyber Empire/);
   });
 
   await cenario("2. Mousepad com imagem própria, ajuste e prévia", async () => {
@@ -268,7 +268,7 @@ async function cenario(nome, fn) {
   await cenario("Checkout valida campos e pedido fica aguardando pagamento (demonstração)", async () => {
     await irPara("#/personalizar/mousepad/m");
     await page.click("label.opcao:has(input[value=arte])");
-    await page.click("label.opcao-arte:has(input[value=abstrato])");
+    await page.click("label.opcao-arte:has(input[value=marmore])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
     await page.click("[data-adicionar]");
     await page.waitForURL(/#\/carrinho/);
@@ -293,6 +293,8 @@ async function cenario(nome, fn) {
     const errosForm = await page.$$eval(".campo .erro", els => els.map(e => e.id + ":" + e.textContent).filter(t => !t.endsWith(":")));
     assert.deepEqual(errosForm, []);
     await page.waitForURL(/checkout\/revisao/);
+    // a revisão é desenhada depois da troca de rota; espera o conteúdo aparecer
+    await page.waitForFunction(() => /Pix pelo Mercado Pago|Pix combinado pelo WhatsApp|Pagamento ainda não configurado/.test(document.querySelector("main").textContent));
     assert.match(await page.textContent("main"), /Entrega a combinar/);
     assert.match(await page.textContent("main"), /Pix pelo Mercado Pago|Pix combinado pelo WhatsApp|Pagamento ainda não configurado/);
     assert.doesNotMatch(await page.textContent("main"), /Chave:/);
@@ -315,7 +317,7 @@ async function cenario(nome, fn) {
     const pedido = await page.evaluate(() => JSON.parse(localStorage.getItem("empire-ultimo-pedido")));
     assert.equal(pedido.status, "aguardando_pagamento");
     assert.equal(pedido.pagamento.confirmado, false);
-    assert.equal(pedido.itens[0].personalizacao.arte.id, "abstrato");
+    assert.equal(pedido.itens[0].personalizacao.arte.id, "marmore");
     // o pedido foi registrado no servidor da loja
     assert.match(pedido.chave, /^[0-9a-f]{32}$/);
     assert.equal(pedido.cliente.aceitaWhatsApp, true);
@@ -326,7 +328,7 @@ async function cenario(nome, fn) {
   await cenario("CEP preenche o endereço automaticamente", async () => {
     await irPara("#/personalizar/mousepad/p");
     await page.click("label.opcao:has(input[value=arte])");
-    await page.click("label.opcao-arte:has(input[value=ceu-pastel])");
+    await page.click("label.opcao-arte:has(input[value=galaxia])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
     await page.click("[data-adicionar]");
     await page.waitForURL(/#\/carrinho/);
@@ -362,7 +364,7 @@ async function cenario(nome, fn) {
     await page.goto(base + "#/"); await page.reload();
     await irPara("#/personalizar/mousepad/m");
     await page.click("label.opcao:has(input[value=arte])");
-    await page.click("label.opcao-arte:has(input[value=neon-gamer])");
+    await page.click("label.opcao-arte:has(input[value=cyber-empire])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
     await page.click("[data-qtd='1']");
     await page.click("[data-adicionar]");
@@ -484,8 +486,87 @@ async function cenario(nome, fn) {
     assert.match(await page.textContent(".status-pedido"), /Enviado/);
   });
 
+  await cenario("Galeria de artes: filtros, escolha da arte e troca de tamanho", async () => {
+    await irPara("#/artes");
+    await page.waitForSelector(".cartao-arte");
+    assert.equal(await page.locator(".cartao-arte").count(), 10);
+    assert.equal(await page.locator(".cartao-arte .selo-provisoria").count(), 10);
+    for (const nome of ["Cyber Empire", "Dragão", "Galáxia", "Topográfico", "Pet Lovers", "Minimalista", "Retro Wave", "Arte Oriental", "Mapa Mundi", "Mármore"]) {
+      assert.ok(await page.isVisible(`.cartao-arte h2:text-is("${nome}")`), nome);
+    }
+    assert.match(await page.textContent(".cartao-arte"), /Compacto 22 × 18 cm · Standard 30 × 25 cm · Extended 90 × 40 cm/);
+    await page.click("[data-colecao=pets]");
+    assert.deepEqual(await page.$$eval(".cartao-arte h2", h => h.map(x => x.textContent)), ["Pet Lovers"]);
+    await page.click("[data-colecao='']");
+    await page.fill("[data-busca]", "marmore");
+    assert.deepEqual(await page.$$eval(".cartao-arte h2", h => h.map(x => x.textContent)), ["Mármore"]);
+    await page.fill("[data-busca]", "");
+    await page.click(".cartao-arte:has(h2:text-is('Cyber Empire')) a:has-text('Escolher esta arte')");
+    await page.waitForURL(/#\/personalizar\/mousepad\/m\?arte=cyber-empire$/);
+    await page.waitForSelector("[data-ajustes]:not([hidden])");
+    assert.equal(await page.isChecked("input[name=arte][value=cyber-empire]"), true);
+    assert.match(await page.textContent("[data-legenda]"), /30 × 25 cm/);
+    const proporcao = () => page.$eval(".previa-palco canvas", c => c.width / c.height);
+    const pM = await proporcao();
+    await page.click("label.opcao:has(input[name=modelo][value=g])");
+    await page.waitForURL(/#\/personalizar\/mousepad\/g\?arte=cyber-empire$/);
+    // a página é redesenhada depois da troca de rota: espera a prévia do Extended
+    await page.waitForFunction(() => /90 × 40 cm/.test(document.querySelector("[data-legenda]")?.textContent || "") && !document.querySelector("[data-ajustes]").hidden);
+    await page.waitForFunction(() => { const c = document.querySelector(".previa-palco canvas"); return c && c.width / c.height > 2; });
+    assert.equal(await page.isChecked("input[name=arte][value=cyber-empire]"), true);
+    assert.match(await page.textContent("[data-legenda]"), /90 × 40 cm/);
+    const pG = await proporcao();
+    assert.ok(pG > pM + 0.5, `proporção Extended ${pG} deve ser bem mais larga que Standard ${pM}`);
+    await page.click("label.opcao:has(input[name=modelo][value=p])");
+    await page.waitForURL(/#\/personalizar\/mousepad\/p\?arte=cyber-empire$/);
+    await page.waitForFunction(() => /22 × 18 cm/.test(document.querySelector("[data-legenda]")?.textContent || "") && !document.querySelector("[data-ajustes]").hidden);
+    await page.click("[data-adicionar]");
+    await page.waitForURL(/#\/carrinho/);
+    const itens = await itensCarrinho();
+    const ultimo = itens[itens.length - 1];
+    assert.equal(ultimo.modeloId, "p");
+    assert.equal(ultimo.modeloNome, "Mousepad Compacto");
+    assert.equal(ultimo.personalizacao.arte.id, "cyber-empire");
+    // "Enviar minha imagem" abre direto o envio de arquivo
+    await irPara("#/personalizar/mousepad/m?fonte=upload");
+    await page.waitForSelector("[data-bloco-upload]:not([hidden])");
+    assert.equal(await page.isChecked("input[name=fonte][value=upload]"), true);
+    await limpar();
+  });
+
+  await cenario("Mousepads de times: lista, filtro e times sem licença fora de venda", async () => {
+    await irPara("#/times");
+    await page.waitForSelector(".cartao-time");
+    const nomes = await page.$$eval(".cartao-time h2", h => h.map(x => x.textContent));
+    for (const t of ["Coritiba", "Athletico Paranaense", "Paraná Clube"]) assert.ok(nomes.includes(t), t);
+    assert.equal(await page.locator("a:has-text('Escolher este time')").count(), 0);
+    assert.equal(await page.locator(".cartao-time .selo-provisoria").count(), nomes.length);
+    assert.doesNotMatch(await page.textContent("main"), /licenciad[oa]s? oficial/i);
+    await page.selectOption("[data-time]", "parana-clube");
+    assert.deepEqual(await page.$$eval(".cartao-time h2", h => h.map(x => x.textContent)), ["Paraná Clube"]);
+    const link = await page.getAttribute(".cartao-time a:has-text('Avise-me pelo WhatsApp')", "href");
+    assert.match(decodeURIComponent(link), /^https:\/\/wa\.me\/\d+\?text=.*Paraná Clube/);
+    // quando a loja cadastra a arte autorizada, o time pode ser escolhido
+    await page.route("**/data/catalogo.json", async r => {
+      const resp = await r.fetch(); const json = await resp.json();
+      Object.assign(json.times.find(t => t.id === "coritiba"), { licenciado: true, imagem: "assets/artes/futebol-generico.jpg", miniatura: "assets/artes/miniaturas/futebol-generico.jpg", licenca: "teste" });
+      r.fulfill({ response: resp, json });
+    });
+    try {
+      await page.goto(base + "#/times"); await page.reload();
+      await page.waitForSelector(".cartao-time");
+      await page.click(".cartao-time[data-time-id=coritiba] a:has-text('Escolher este time')");
+      await page.waitForURL(/arte=time-coritiba$/);
+      await page.waitForSelector("[data-ajustes]:not([hidden])");
+      assert.equal(await page.isChecked("input[name=arte][value=time-coritiba]"), true);
+    } finally {
+      await page.unroute("**/data/catalogo.json");
+      await page.goto(base + "#/"); await page.reload();
+    }
+  });
+
   await cenario("Layout sem rolagem horizontal no celular", async () => {
-    for (const h of ["#/", "#/catalogo", "#/personalizar/mousepad/g", "#/carrinho", "#/privacidade", "painel.html#EMP-PAINE1"]) {
+    for (const h of ["#/", "#/catalogo", "#/personalizar/mousepad/g", "#/carrinho", "#/privacidade", "#/artes", "#/times", "painel.html#EMP-PAINE1"]) {
       await irPara(h);
       const largura = await page.evaluate(() => document.documentElement.scrollWidth);
       assert.ok(largura <= 390, `${h} tem ${largura}px de largura`);
