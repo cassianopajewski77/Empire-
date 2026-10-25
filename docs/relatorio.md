@@ -34,7 +34,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Artes da galeria | 10 conceitos originais (Cyber Empire, Dragão, Galáxia, Topográfico, Pet Lovers, Minimalista, Retro Wave, Arte Oriental, Mapa Mundi, Mármore) gerados por programa como demonstração, com o selo "Arte provisória". Nenhum é recorte do cartaz de referência. Precisam ser trocados pelas artes finais (ver README). |
-| Times de futebol | 18 clubes cadastrados (Coritiba, Athletico Paranaense e Paraná Clube primeiro), todos com `licenciado: false`: arte genérica sem escudo, "Em breve" e fora de venda até haver arte oficial e autorização. |
+| Times de futebol | 18 clubes cadastrados. 13 aprovados pelos clubes, segundo o Cassiano em 25/10/2026 (Palmeiras, Flamengo, Corinthians, São Paulo, Santos, Grêmio, Internacional, Atlético Mineiro, Vasco, Botafogo, Coritiba, Athletico Paranaense e Paraná Clube), à venda com imagem de vitrine recortada do cartaz e o selo "Imagem ilustrativa". A impressão precisa dos arquivos originais em alta resolução. Cruzeiro, Fluminense, Bahia, Sport Recife e Fortaleza continuam "Em breve". |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
 
 ## 4. Status de pedido
@@ -74,7 +74,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 2. Para o envio automático: conta da Meta, modelos aprovados e os segredos `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` (passo a passo no README).
 3. Cadastrar descrição e imagem de referência dos Modelos Clássico e Divertido.
 4. Trocar as 10 artes provisórias pelas artes finais.
-5. Para vender times: arte oficial e autorização de cada clube, e marcar `licenciado: true`.
+5. Times: guardar a aprovação de cada clube e mandar os arquivos originais em alta resolução para a impressão (as imagens do site são só vitrine).
 
 ## 8. Testes
 

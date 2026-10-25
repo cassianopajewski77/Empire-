@@ -51,7 +51,7 @@ export function artesPublicadas(catalogo, modeloId) {
   const artes = (catalogo.artes || []).filter(a => a.publicado !== false && ofereceModelo(a, modeloId));
   const times = timesPublicados(catalogo)
     .filter(t => t.oficial && ofereceModelo(t, modeloId))
-    .map(t => ({ id: `time-${t.id}`, nome: t.nome, colecao: "times", imagem: t.imagem, miniatura: t.miniatura, provisoria: false }));
+    .map(t => ({ id: `time-${t.id}`, nome: t.nome, colecao: "times", imagem: t.imagem, miniatura: t.miniatura, provisoria: false, ilustrativa: t.imagemIlustrativa === true }));
   return [...artes, ...times];
 }
 

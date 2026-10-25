@@ -262,7 +262,7 @@ function paginaTimes() {
       <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / <a href="#/mousepads">Mousepads</a> / Times de futebol</nav>
       <h1>Mousepads de times de futebol</h1>
       <p>Os principais times do Brasil, nos tamanhos Compacto, Standard e Extended.</p>
-      <p class="aviso aviso-info" style="max-width:46em"><strong>Sobre escudos e marcas</strong>Escudos, nomes estilizados e uniformes pertencem aos clubes. A loja só vende a arte de um time depois de ter a autorização. Até lá, os cartões mostram uma arte genérica de futebol e o time aparece como "Em breve".</p>
+      <p class="aviso aviso-info" style="max-width:46em"><strong>Sobre escudos e marcas</strong>Escudos, nomes estilizados e uniformes pertencem aos clubes. A loja só vende a arte de um time com a aprovação do clube. Os times ainda sem aprovação aparecem com uma arte genérica de futebol e como "Em breve".</p>
     </div>
     <div class="wrap" style="padding-bottom:48px">
       <div class="filtros" role="search">
@@ -288,8 +288,8 @@ function paginaTimes() {
       const padrao = modelos.find(m => m.id === "m") || modelos[0];
       const aviso = `https://wa.me/${whats}?text=${encodeURIComponent(`Olá! Quero ser avisado quando o mousepad do ${t.nome} estiver disponível.`)}`;
       return `<article class="cartao cartao-arte cartao-time" data-time-id="${esc(t.id)}">
-        <div class="midia"><img src="${esc(t.miniatura)}" alt="${t.oficial ? `Arte oficial do ${esc(t.nome)}` : "Arte genérica de campo de futebol, sem escudo"}" loading="lazy" width="720" height="320">
-          ${t.oficial ? "" : `<span class="nome-sobre">${esc(t.nome)}</span><span class="selo-provisoria">Arte provisória · sem escudo</span>`}</div>
+        <div class="midia"><img src="${esc(t.miniatura)}" alt="${t.oficial ? `Arte do ${esc(t.nome)}` : "Arte genérica de campo de futebol, sem escudo"}" loading="lazy" width="720" height="320">
+          ${t.oficial ? (t.imagemIlustrativa ? `<span class="selo-provisoria">Imagem ilustrativa</span>` : "") : `<span class="nome-sobre">${esc(t.nome)}</span><span class="selo-provisoria">Arte provisória · sem escudo</span>`}</div>
         <div class="corpo">
           <p class="colecao">Futebol · ${esc(t.estado || "")}</p>
           <h2>${esc(t.nome)}</h2>

@@ -300,7 +300,7 @@
     }
   ],
   "_leiaArtes": "Artes da loja. 'provisoria': true mostra o selo 'Arte provisória' (imagem de demonstração). Para trocar pela arte final: coloque o arquivo em public/assets/artes/ (JPG, de preferência 4500 × 2000 px para o Extended), atualize 'imagem' e 'miniatura' e mude 'provisoria' para false. 'modelos' diz em quais tamanhos a arte é oferecida (p, m, g).",
-  "_leiaTimes": "Mousepads de times. Escudos e marcas dos clubes são protegidos: só mude 'licenciado' para true e preencha 'imagem', 'miniatura' e 'licenca' quando a loja tiver a arte oficial e a autorização do clube. Sem isso, o site mostra a arte genérica e o time não pode ser comprado. 'observacaoInterna' não aparece no site.",
+  "_leiaTimes": "Mousepads de times. Escudos e marcas dos clubes são protegidos: só mude 'licenciado' para true e preencha 'imagem', 'miniatura' e 'licenca' quando a loja tiver a arte oficial e a autorização do clube. Sem isso, o site mostra a arte genérica e o time não pode ser comprado. 'observacaoInterna' não aparece no site. 'imagemIlustrativa': true mostra o selo 'Imagem ilustrativa' (imagem de vitrine, não é o arquivo de impressão).",
   "timesArteProvisoria": {
     "imagem": "assets/artes/futebol-generico.jpg",
     "miniatura": "assets/artes/miniaturas/futebol-generico.jpg"
@@ -310,177 +310,188 @@
       "id": "coritiba",
       "nome": "Coritiba",
       "estado": "PR",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/coritiba.jpg",
+      "miniatura": "assets/artes/times/miniaturas/coritiba.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "athletico-paranaense",
       "nome": "Athletico Paranaense",
       "estado": "PR",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/athletico-paranaense.jpg",
+      "miniatura": "assets/artes/times/miniaturas/athletico-paranaense.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "parana-clube",
       "nome": "Paraná Clube",
       "estado": "PR",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/parana-clube.jpg",
+      "miniatura": "assets/artes/times/miniaturas/parana-clube.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "flamengo",
       "nome": "Flamengo",
       "estado": "RJ",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/flamengo.jpg",
+      "miniatura": "assets/artes/times/miniaturas/flamengo.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "corinthians",
       "nome": "Corinthians",
       "estado": "SP",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/corinthians.jpg",
+      "miniatura": "assets/artes/times/miniaturas/corinthians.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "palmeiras",
       "nome": "Palmeiras",
       "estado": "SP",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/palmeiras.jpg",
+      "miniatura": "assets/artes/times/miniaturas/palmeiras.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "sao-paulo",
       "nome": "São Paulo",
       "estado": "SP",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/sao-paulo.jpg",
+      "miniatura": "assets/artes/times/miniaturas/sao-paulo.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "santos",
       "nome": "Santos",
       "estado": "SP",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/santos.jpg",
+      "miniatura": "assets/artes/times/miniaturas/santos.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "gremio",
       "nome": "Grêmio",
       "estado": "RS",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/gremio.jpg",
+      "miniatura": "assets/artes/times/miniaturas/gremio.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "internacional",
       "nome": "Internacional",
       "estado": "RS",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/internacional.jpg",
+      "miniatura": "assets/artes/times/miniaturas/internacional.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "atletico-mineiro",
       "nome": "Atlético Mineiro",
       "estado": "MG",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/atletico-mineiro.jpg",
+      "miniatura": "assets/artes/times/miniaturas/atletico-mineiro.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "cruzeiro",
@@ -502,33 +513,35 @@
       "id": "vasco",
       "nome": "Vasco",
       "estado": "RJ",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/vasco.jpg",
+      "miniatura": "assets/artes/times/miniaturas/vasco.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "botafogo",
       "nome": "Botafogo",
       "estado": "RJ",
-      "imagem": null,
-      "miniatura": null,
-      "licenciado": false,
-      "licenca": null,
-      "observacaoInterna": "Aguardando arte oficial e autorização do clube.",
+      "imagem": "assets/artes/times/botafogo.jpg",
+      "miniatura": "assets/artes/times/miniaturas/botafogo.jpg",
+      "licenciado": true,
+      "licenca": "Arte aprovada pelo clube, conforme informado por Cassiano Pajewski em 25/10/2026.",
+      "observacaoInterna": "Imagem da vitrine recortada do cartaz de referência (baixa resolução, só para o site). Imprimir com o arquivo original em alta resolução.",
       "modelos": [
         "p",
         "m",
         "g"
       ],
-      "publicado": true
+      "publicado": true,
+      "imagemIlustrativa": true
     },
     {
       "id": "fluminense",

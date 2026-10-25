@@ -534,35 +534,47 @@ async function cenario(nome, fn) {
     await limpar();
   });
 
-  await cenario("Mousepads de times: lista, filtro e times sem licença fora de venda", async () => {
+  await cenario("Mousepads de times: lista, filtro, times aprovados à venda e os demais fora de venda", async () => {
     await irPara("#/times");
     await page.waitForSelector(".cartao-time");
     const nomes = await page.$$eval(".cartao-time h2", h => h.map(x => x.textContent));
     for (const t of ["Coritiba", "Athletico Paranaense", "Paraná Clube"]) assert.ok(nomes.includes(t), t);
-    assert.equal(await page.locator("a:has-text('Escolher este time')").count(), 0);
-    assert.equal(await page.locator(".cartao-time .selo-provisoria").count(), nomes.length);
-    assert.doesNotMatch(await page.textContent("main"), /licenciad[oa]s? oficial/i);
-    await page.selectOption("[data-time]", "parana-clube");
-    assert.deepEqual(await page.$$eval(".cartao-time h2", h => h.map(x => x.textContent)), ["Paraná Clube"]);
-    const link = await page.getAttribute(".cartao-time a:has-text('Avise-me pelo WhatsApp')", "href");
-    assert.match(decodeURIComponent(link), /^https:\/\/wa\.me\/\d+\?text=.*Paraná Clube/);
-    // quando a loja cadastra a arte autorizada, o time pode ser escolhido
-    await page.route("**/data/catalogo.json", async r => {
-      const resp = await r.fetch(); const json = await resp.json();
-      Object.assign(json.times.find(t => t.id === "coritiba"), { licenciado: true, imagem: "assets/artes/futebol-generico.jpg", miniatura: "assets/artes/miniaturas/futebol-generico.jpg", licenca: "teste" });
-      r.fulfill({ response: resp, json });
-    });
-    try {
-      await page.goto(base + "#/times"); await page.reload();
-      await page.waitForSelector(".cartao-time");
-      await page.click(".cartao-time[data-time-id=coritiba] a:has-text('Escolher este time')");
-      await page.waitForURL(/arte=time-coritiba$/);
-      await page.waitForSelector("[data-ajustes]:not([hidden])");
-      assert.equal(await page.isChecked("input[name=arte][value=time-coritiba]"), true);
-    } finally {
-      await page.unroute("**/data/catalogo.json");
-      await page.goto(base + "#/"); await page.reload();
+    const catalogo = await page.evaluate(() => fetch("data/catalogo.json").then(r => r.json()));
+    const aprovados = catalogo.times.filter(t => t.publicado !== false && t.licenciado === true && t.imagem);
+    const semAprovacao = catalogo.times.filter(t => t.publicado !== false && !(t.licenciado === true && t.imagem));
+    assert.equal(await page.locator("a:has-text('Escolher este time')").count(), aprovados.length);
+    assert.equal(await page.locator("a:has-text('Avise-me pelo WhatsApp')").count(), semAprovacao.length);
+    // times sem aprovação nunca mostram escudo: só a arte genérica com o nome em texto
+    for (const t of semAprovacao) {
+      assert.equal(await page.getAttribute(`.cartao-time[data-time-id=${t.id}] img`, "src"), catalogo.timesArteProvisoria.miniatura);
     }
+    // imagens de vitrine aparecem marcadas como ilustrativas
+    assert.equal(await page.locator(".cartao-time .selo-provisoria:text-is('Imagem ilustrativa')").count(), aprovados.filter(t => t.imagemIlustrativa).length);
+    assert.doesNotMatch(await page.textContent("main"), /licenciad[oa]s? oficial/i);
+    if (semAprovacao.length) {
+      const t = semAprovacao[0];
+      await page.selectOption("[data-time]", t.id);
+      assert.deepEqual(await page.$$eval(".cartao-time h2", h => h.map(x => x.textContent)), [t.nome]);
+      const link = await page.getAttribute(".cartao-time a:has-text('Avise-me pelo WhatsApp')", "href");
+      assert.ok(decodeURIComponent(link).includes(t.nome));
+    }
+    // escolher um time aprovado leva ao personalizador e o time vai para o carrinho no tamanho escolhido
+    assert.ok(aprovados.some(t => t.id === "coritiba"), "Coritiba aprovado no catálogo");
+    await page.selectOption("[data-time]", "coritiba");
+    await page.click(".cartao-time[data-time-id=coritiba] a:has-text('Escolher este time')");
+    await page.waitForURL(/arte=time-coritiba$/);
+    await page.waitForSelector("[data-ajustes]:not([hidden])");
+    assert.equal(await page.isChecked("input[name=arte][value=time-coritiba]"), true);
+    await page.click("label.opcao:has(input[name=modelo][value=g])");
+    await page.waitForURL(/#\/personalizar\/mousepad\/g\?arte=time-coritiba$/);
+    await page.waitForFunction(() => /90 × 40 cm/.test(document.querySelector("[data-legenda]")?.textContent || "") && !document.querySelector("[data-ajustes]").hidden);
+    await page.click("[data-adicionar]");
+    await page.waitForURL(/#\/carrinho/);
+    const itens = await itensCarrinho();
+    const ultimo = itens[itens.length - 1];
+    assert.equal(ultimo.modeloId, "g");
+    assert.equal(ultimo.personalizacao.arte.id, "time-coritiba");
+    await limpar();
   });
 
   await cenario("Layout sem rolagem horizontal no celular", async () => {
