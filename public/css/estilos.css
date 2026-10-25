@@ -308,6 +308,10 @@ main { flex: 1; }
 .beneficios span { color: var(--color-muted); font-size: .95rem; overflow-wrap: anywhere; }
 .beneficios a { color: var(--color-black); font-weight: 600; }
 /* temas do comedouro */
-.temas { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.temas { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 .opcao-tema { flex-direction: row; align-items: center; gap: 10px; }
 .opcao-tema .amostra { width: 30px; height: 30px; flex: none; border-radius: 8px; border: 1px solid var(--color-border); }
+.previas-comedouro { display: grid; gap: 12px; }
+.previas-comedouro figure { margin: 0; min-width: 0; }
+.previas-comedouro figcaption { font-size: .85rem; font-weight: 600; margin-top: 6px; color: var(--color-muted); }
+.previas-comedouro canvas { cursor: default; }

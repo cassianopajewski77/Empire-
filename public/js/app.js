@@ -342,7 +342,7 @@ const CATEGORIAS_PET = [
     titulo: "Comedouros Personalizados",
     botao: "Explorar Comedouros",
     destaques: ["Nome do pet ou frase curta", "Temas e cores para escolher", "Prévia antes de comprar", "Personalização fácil, em poucos passos"],
-    alt: "Tapete cinza com patinhas embaixo de dois potes de inox, um com água e outro com ração, e o nome Bento na faixa da frente",
+    alt: "Tapete cinza com patinhas embaixo de dois potes de inox, um com água e outro com ração, e o nome Miles na faixa da frente",
   },
   {
     produtoId: "tapete-pet",

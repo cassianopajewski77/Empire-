@@ -82,7 +82,7 @@
       "descricao": "Um cantinho especial para a hora da refeição. Personalize o tapete do seu pet com nome, cores e temas exclusivos.",
       "publicado": true,
       "_incluiPotes": "true: os potes acompanham; false: não acompanham; null: ainda não definido (o site pede para consultar a loja).",
-      "incluiPotes": null,
+      "incluiPotes": false,
       "imagemIlustrativa": "assets/pet/comedouro-ilustrativo.jpg",
       "personalizacao": {
         "tipo": "texto",
@@ -93,12 +93,12 @@
         "temas": [
           {
             "id": "grafite",
-            "nome": "Grafite",
+            "nome": "Preto e cinza",
             "cores": {
-              "fundo": "#3a3d42",
-              "faixa": "#23252a",
-              "patinhas": "#4d5157",
-              "texto": "#ffffff",
+              "fundo": "#7f8084",
+              "faixa": "#1c1d20",
+              "patinhas": "#5c5d61",
+              "texto": "#f2f2f2",
               "destaque": "#e7b98b"
             }
           },
@@ -120,6 +120,17 @@
               "fundo": "#f4b6c8",
               "faixa": "#d9668a",
               "patinhas": "#eaa0b6",
+              "texto": "#ffffff",
+              "destaque": "#ffffff"
+            }
+          },
+          {
+            "id": "amarelo",
+            "nome": "Amarelo",
+            "cores": {
+              "fundo": "#f7d65a",
+              "faixa": "#c99a12",
+              "patinhas": "#ecc644",
               "texto": "#ffffff",
               "destaque": "#ffffff"
             }
@@ -154,18 +165,15 @@
           "nome": "Comedouro personalizado",
           "descricao": "Tapete para colocar embaixo dos potes de água e ração.",
           "dimensoes": {
-            "larguraCm": null,
-            "alturaCm": null,
-            "rotulo": "Tamanho a definir"
+            "larguraCm": 60,
+            "alturaCm": 40,
+            "rotulo": "40 × 60 cm"
           },
           "preco": 69.9,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
           "imagens": [],
-          "previa": {
-            "proporcao": 1.6,
-            "provisoria": true
-          }
+          "previa": {}
         }
       ]
     },

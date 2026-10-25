@@ -243,7 +243,7 @@ async function cenario(nome, fn) {
     await page.click(".cartao >> text=Personalizar");
     await page.waitForURL(/personalizar\/comedouro\/padrao/);
     await page.waitForSelector("#nome-pet");
-    assert.match(await page.textContent("[data-nota-potes]"), /Consulte a loja se os potes acompanham/);
+    assert.match(await page.textContent("[data-nota-potes]"), /Os potes não acompanham o produto/);
     // sem nome não avança
     await page.click("[data-adicionar]");
     assert.match(await page.textContent("[data-pendencia]"), /Digite o nome do seu pet/);
@@ -251,7 +251,8 @@ async function cenario(nome, fn) {
     // prévia respeita a proporção configurada e muda com o nome e o tema
     const quadro = () => page.$eval(".previa-palco canvas", c => c.toDataURL());
     const prop = await page.$eval(".previa-palco canvas", c => c.width / c.height);
-    assert.ok(Math.abs(prop - 1.6) < 0.02, `proporção ${prop}`);
+    assert.ok(Math.abs(prop - 1.5) < 0.02, `proporção ${prop}`);
+    assert.equal(await page.locator(".previa-palco canvas").count(), 2, "prévia com e sem os potes");
     const vazio = await quadro();
     await page.fill("#nome-pet", "Bento");
     const comNome = await quadro();

@@ -35,7 +35,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Artes da galeria | 10 conceitos originais (Cyber Empire, Dragão, Galáxia, Topográfico, Pet Lovers, Minimalista, Retro Wave, Arte Oriental, Mapa Mundi, Mármore) gerados por programa como demonstração, com o selo "Arte provisória". Nenhum é recorte do cartaz de referência. Precisam ser trocados pelas artes finais (ver README). |
 | Times de futebol | 18 clubes cadastrados. 13 aprovados pelos clubes, segundo o Cassiano em 25/10/2026 (Palmeiras, Flamengo, Corinthians, São Paulo, Santos, Grêmio, Internacional, Atlético Mineiro, Vasco, Botafogo, Coritiba, Athletico Paranaense e Paraná Clube), à venda com imagem de vitrine recortada do cartaz e o selo "Imagem ilustrativa". A impressão precisa dos arquivos originais em alta resolução. Cruzeiro, Fluminense, Bahia, Sport Recife e Fortaleza continuam "Em breve". |
-| Comedouros personalizados | Página `#/comedouros` e personalizador próprio (`public/js/comedouro.js`): nome ou frase curta (até 14 letras), 5 temas de cor e prévia com potes só ilustrativos. Preço R$ 69,90 (informado pelo Cassiano em 25/10/2026). Medida, material e se os potes acompanham ainda não foram informados: o site mostra "Tamanho a definir" (prévia na proporção provisória 1,6 : 1, em `previa.proporcao`) e "Consulte a loja se os potes acompanham o produto" (`incluiPotes: null`). |
+| Comedouros personalizados | Página `#/comedouros` e personalizador próprio (`public/js/comedouro.js`): nome ou frase curta (até 14 letras) e 6 temas de cor (Preto e cinza, igual à foto de referência, Ciano Empire, Rosa, Amarelo, Areia e Azul). Prévia em duas imagens, com os potes (ilustração) e sem os potes. Dados do Cassiano em 25/10/2026: R$ 69,90, 40 × 60 cm, potes não acompanham (`incluiPotes: false`). A imagem da vitrine é recortada da referência, com o nome trocado para "Miles" e o selo "Imagem ilustrativa". Falta informar o material. |
 | Página Tapetes pet | `#/tapetes-pet` mostra as duas categorias (comedouros e tapetes com o rosto do pet), com imagens marcadas "Imagem ilustrativa" e uma faixa só com informações reais: entrega (de `loja.json`), Pix pelo Mercado Pago e WhatsApp da loja. Não há selo de "compra segura". |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
 
@@ -76,7 +76,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 2. Para o envio automático: conta da Meta, modelos aprovados e os segredos `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` (passo a passo no README).
 3. Cadastrar descrição e imagem de referência dos Modelos Clássico e Divertido.
 4. Trocar as 10 artes provisórias pelas artes finais.
-5. Comedouros: informar medida, material, se os potes acompanham e, se quiser, os temas de cor definitivos e fotos reais do produto.
+5. Comedouros: informar o material e mandar fotos reais do produto.
 6. Times: guardar a aprovação de cada clube e mandar os arquivos originais em alta resolução para a impressão (as imagens do site são só vitrine).
 
 ## 8. Testes

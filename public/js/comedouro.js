@@ -1,7 +1,7 @@
 // Personalizador do comedouro: tapete que fica embaixo dos potes de água e
 // ração, com o nome do pet (ou uma frase curta) e um tema de cores.
 // Mesma interface do Personalizador de imagens: estado(), exportar(), destruir().
-// Os potes aparecem só na prévia, como ilustração; o arquivo de produção é só o tapete.
+// A prévia mostra o tapete com os potes (ilustração) e sem eles; o arquivo de produção é só o tapete.
 
 import { esc } from "./util.js";
 
@@ -80,7 +80,10 @@ export class PersonalizadorComedouro {
     const max = regras.textoMax || 14;
     this.o.previa.innerHTML = `
       <div class="previa-box">
-        <div class="previa-palco"><canvas role="img" aria-label="Prévia do tapete do comedouro com o nome do pet"></canvas></div>
+        <div class="previa-palco previas-comedouro">
+          <figure><canvas data-com-potes role="img" aria-label="Prévia do tapete com os potes de água e ração em cima"></canvas><figcaption>Com os potes</figcaption></figure>
+          <figure><canvas data-sem-potes role="img" aria-label="Prévia do tapete sozinho, sem os potes"></canvas><figcaption>Sem os potes</figcaption></figure>
+        </div>
         <div class="previa-legenda"><span data-legenda></span><span>Potes só na ilustração</span></div>
         <p class="aviso-previa" data-aviso-previa><strong>Prévia ilustrativa.</strong> A peça impressa pode ter pequenas diferenças de cor e de enquadramento.${this.o.proporcaoProvisoria ? " A medida do tapete ainda será definida pela loja." : ""}</p>
         ${this.o.notaPotes ? `<p class="dica-artes" data-nota-potes>${esc(this.o.notaPotes)}</p>` : ""}
@@ -88,7 +91,7 @@ export class PersonalizadorComedouro {
     this.o.controles.innerHTML = `
       <div class="grupo campo">
         <label for="nome-pet"><span class="rotulo">${esc(regras.rotuloTexto || "Nome do pet")} (obrigatório)</span></label>
-        <input type="text" id="nome-pet" data-texto maxlength="${max}" autocomplete="off" placeholder="Ex.: Bento" aria-describedby="dica-nome-pet">
+        <input type="text" id="nome-pet" data-texto maxlength="${max}" autocomplete="off" placeholder="Ex.: Miles" aria-describedby="dica-nome-pet">
         <div class="dica" id="dica-nome-pet"><span data-contagem>0</span>/${max} caracteres.${regras.dicaTexto ? " " + esc(regras.dicaTexto) : ""}</div>
       </div>
       ${this.temas.length ? `
@@ -100,8 +103,10 @@ export class PersonalizadorComedouro {
             <strong>${esc(t.nome)}</strong></label>`).join("")}</div>
       </fieldset>` : ""}`;
 
-    this.canvas = this.o.previa.querySelector("canvas");
-    this.ctx = this.canvas.getContext("2d");
+    this.telas = [
+      { canvas: this.o.previa.querySelector("[data-com-potes]"), comPotes: true },
+      { canvas: this.o.previa.querySelector("[data-sem-potes]"), comPotes: false },
+    ];
     this.o.previa.querySelector("[data-legenda]").textContent = this.o.legenda || "";
     const entrada = this.o.controles.querySelector("[data-texto]");
     entrada.addEventListener("input", () => {
@@ -145,7 +150,7 @@ export class PersonalizadorComedouro {
     // patinhas espalhadas em grade levemente desalinhada
     const passo = h * 0.2;
     for (let lin = 0, y = passo * 0.45; y < h * 0.72; y += passo * 0.8, lin++) {
-      for (let x = passo * (lin % 2 ? 0.9 : 0.45); x < w; x += passo) {
+      for (let x = passo * (lin % 2 ? 0.9 : 0.45); x < w - passo * 0.35; x += passo) {
         patinha(ctx, x, y, h * 0.075, ((lin * 7 + x) % 5 - 2) * 0.25, c.patinhas);
       }
     }
@@ -182,12 +187,13 @@ export class PersonalizadorComedouro {
   }
 
   desenhar() {
-    const palco = this.o.previa.querySelector(".previa-palco");
-    const larguraCss = Math.max(200, palco.clientWidth || 600);
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.round(larguraCss * dpr), h = Math.round(larguraCss / this.o.proporcao * dpr);
-    if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
-    this.compor(this.ctx, w, h, true);
+    for (const { canvas, comPotes } of this.telas) {
+      const larguraCss = Math.max(140, canvas.parentElement.clientWidth || 300);
+      const w = Math.round(larguraCss * dpr), h = Math.round(larguraCss / this.o.proporcao * dpr);
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      this.compor(canvas.getContext("2d"), w, h, comPotes);
+    }
   }
 
   async exportar() {
