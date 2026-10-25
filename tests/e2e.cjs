@@ -226,7 +226,7 @@ async function cenario(nome, fn) {
     await page.waitForURL(/#\/comedouros$/);
     await page.waitForSelector("h1:has-text('Comedouros personalizados')");
     assert.equal(await page.getAttribute("#menu a[href='#/tapetes-pet']", "aria-current"), "page");
-    assert.match(await page.textContent(".cartao"), /Preço a definir/);
+    assert.match(await page.textContent(".cartao"), /R\$\s69,90/);
     // a migalha volta para a página das duas categorias
     await page.click(".migalhas a:has-text('Tapetes pet')");
     await page.waitForURL(/#\/tapetes-pet$/);
@@ -273,11 +273,11 @@ async function cenario(nome, fn) {
     assert.notEqual(itens[0].id, itens[1].id);
     assert.deepEqual(itens.map(i => [i.produtoId, i.personalizacao.fonte, i.personalizacao.texto, i.personalizacao.tema.id, i.quantidade]),
       [["comedouro", "texto", "Bento", "rosa", 2], ["comedouro", "texto", "Mia e Tom", "azul", 1]]);
-    assert.equal(itens[0].precoUnitario, null);
+    assert.equal(itens[0].precoUnitario, 69.9);
     const textos = await page.locator(".item").allTextContents();
     assert.match(textos[0], /Nome: Bento · Tema: Rosa/);
     assert.match(textos[1], /Nome: Mia e Tom · Tema: Azul/);
-    assert.match(await page.textContent("[data-total]"), /A definir/);
+    assert.match(await page.textContent("[data-total]"), /R\$\s209,70/);
     await limpar();
   });
 

@@ -27,7 +27,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 | Item | Situação no site |
 | --- | --- |
-| Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido). |
+| Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido); comedouro R$ 69,90. |
 | Pagamento Pix | Modo `mercadopago` (escolha do Cassiano): o servidor da loja (`src/worker.js`) cria a cobrança Pix no Mercado Pago com o valor calculado a partir do catálogo, e o site mostra o QR Code e o copia e cola. A página consulta o status pelo servidor e marca "Pagamento confirmado" só quando o Mercado Pago responde `approved`. Sem o segredo `MP_ACCESS_TOKEN` ou sem preço definido, o site avisa e manda combinar pelo WhatsApp. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
 | Envio do pedido | O pedido é registrado no servidor da loja e aparece no painel. O cliente ainda envia as imagens pelo WhatsApp (41) 99690-7357. |
@@ -35,7 +35,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Artes da galeria | 10 conceitos originais (Cyber Empire, Dragão, Galáxia, Topográfico, Pet Lovers, Minimalista, Retro Wave, Arte Oriental, Mapa Mundi, Mármore) gerados por programa como demonstração, com o selo "Arte provisória". Nenhum é recorte do cartaz de referência. Precisam ser trocados pelas artes finais (ver README). |
 | Times de futebol | 18 clubes cadastrados. 13 aprovados pelos clubes, segundo o Cassiano em 25/10/2026 (Palmeiras, Flamengo, Corinthians, São Paulo, Santos, Grêmio, Internacional, Atlético Mineiro, Vasco, Botafogo, Coritiba, Athletico Paranaense e Paraná Clube), à venda com imagem de vitrine recortada do cartaz e o selo "Imagem ilustrativa". A impressão precisa dos arquivos originais em alta resolução. Cruzeiro, Fluminense, Bahia, Sport Recife e Fortaleza continuam "Em breve". |
-| Comedouros personalizados | Página `#/comedouros` e personalizador próprio (`public/js/comedouro.js`): nome ou frase curta (até 14 letras), 5 temas de cor e prévia com potes só ilustrativos. Preço, medida, material e se os potes acompanham ainda não foram informados: o site mostra "Preço a definir", "Tamanho a definir" (prévia na proporção provisória 1,6 : 1, em `previa.proporcao`) e "Consulte a loja se os potes acompanham o produto" (`incluiPotes: null`). Sem preço, o pedido fica "Aguardando pagamento" e o Pix não é gerado. |
+| Comedouros personalizados | Página `#/comedouros` e personalizador próprio (`public/js/comedouro.js`): nome ou frase curta (até 14 letras), 5 temas de cor e prévia com potes só ilustrativos. Preço R$ 69,90 (informado pelo Cassiano em 25/10/2026). Medida, material e se os potes acompanham ainda não foram informados: o site mostra "Tamanho a definir" (prévia na proporção provisória 1,6 : 1, em `previa.proporcao`) e "Consulte a loja se os potes acompanham o produto" (`incluiPotes: null`). |
 | Página Tapetes pet | `#/tapetes-pet` mostra as duas categorias (comedouros e tapetes com o rosto do pet), com imagens marcadas "Imagem ilustrativa" e uma faixa só com informações reais: entrega (de `loja.json`), Pix pelo Mercado Pago e WhatsApp da loja. Não há selo de "compra segura". |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
 
@@ -76,7 +76,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 2. Para o envio automático: conta da Meta, modelos aprovados e os segredos `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` (passo a passo no README).
 3. Cadastrar descrição e imagem de referência dos Modelos Clássico e Divertido.
 4. Trocar as 10 artes provisórias pelas artes finais.
-5. Comedouros: informar preço, medida, material, se os potes acompanham e, se quiser, os temas de cor definitivos e fotos reais do produto.
+5. Comedouros: informar medida, material, se os potes acompanham e, se quiser, os temas de cor definitivos e fotos reais do produto.
 6. Times: guardar a aprovação de cada clube e mandar os arquivos originais em alta resolução para a impressão (as imagens do site são só vitrine).
 
 ## 8. Testes
@@ -101,7 +101,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 16. Galeria de artes: 10 artes com selo provisório, filtro por coleção, busca, escolha da arte, troca de tamanho mantendo a arte e proporção da prévia em cada tamanho, arte certa no carrinho.
 17. Times: 18 clubes com Coritiba, Athletico Paranaense e Paraná Clube, filtro por clube, nenhum escudo, times sem licença fora de venda.
 18. Página Tapetes pet: dois cartões, imagens carregadas e marcadas como ilustrativas, faixa sem "Compra segura", botões levando a `#/comedouros` e `#/tapetes-foto`, menu marcado e migalha de volta.
-19. Comedouro: nome obrigatório, prévia na proporção configurada mudando com nome e tema, quantidade, dois comedouros diferentes separados no carrinho com nome, tema e "Preço a definir".
+19. Comedouro: nome obrigatório, prévia na proporção configurada mudando com nome e tema, quantidade, dois comedouros diferentes separados no carrinho com nome, tema e o total certo (R$ 69,90 cada).
 20. Nenhum erro de JavaScript.
 
 Resultado em 25/10/2026: 15 de 15 e 20 de 20 passaram.

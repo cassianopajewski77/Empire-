@@ -99,16 +99,15 @@ test("valida o pedido e calcula o total com os preços do catálogo, ignorando o
   assert.equal(r2.pedido.valores.precoAConfirmar, true);
 });
 
-test("comedouro guarda o nome e o tema e, sem preço no catálogo, fica a confirmar", () => {
+test("comedouro guarda o nome e o tema e usa o preço do catálogo", () => {
   const p = pedidoBase();
-  p.itens.push({ produtoId: "comedouro", modeloId: "padrao", quantidade: 2, personalizacaoTexto: "Nome: Bento · Tema: Rosa", fonte: "texto" });
+  p.itens = [{ produtoId: "comedouro", modeloId: "padrao", quantidade: 2, precoUnitario: 0.01, personalizacaoTexto: "Nome: Bento · Tema: Rosa", fonte: "texto" }];
   const r = validarPedido(p, structuredClone(catalogoReal), lojaReal);
-  const item = r.pedido.itens.at(-1);
+  const item = r.pedido.itens[0];
   assert.equal(item.fonte, "texto");
   assert.equal(item.personalizacaoTexto, "Nome: Bento · Tema: Rosa");
-  assert.equal(item.precoUnitario, null);
-  assert.equal(r.pedido.valores.total, null);
-  assert.equal(r.pedido.valores.precoAConfirmar, true);
+  assert.equal(item.precoUnitario, 69.9);
+  assert.equal(r.pedido.valores.total, 139.8);
 });
 
 test("recusa pedido com dados inválidos", () => {

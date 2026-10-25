@@ -60,7 +60,7 @@ A Meta cobra por mensagem de modelo enviada. Só recebe mensagem o cliente que m
 
 O produto `comedouro` em `catalogo.json` usa `personalizacao.tipo: "texto"`: o cliente digita o nome do pet ou uma frase curta (`textoMax`) e escolhe um tema da lista `temas` (cada tema tem as cores `fundo`, `faixa`, `patinhas`, `texto` e `destaque`). Para definir o produto:
 
-- `modelos[0].preco`: o preço. Enquanto for `null`, aparece "Preço a definir" e o Pix não é gerado.
+- `modelos[0].preco`: o preço (hoje 69.9). Com `null`, aparece "Preço a definir" e o Pix não é gerado.
 - `modelos[0].dimensoes`: largura e altura em cm e o `rotulo`. Ao preencher, apague `previa.proporcao` e `previa.provisoria` para a prévia usar a medida real.
 - `incluiPotes`: `true` (os potes acompanham), `false` (não acompanham) ou `null` (o site pede para consultar a loja). Os potes na prévia são só ilustração e não entram no arquivo de impressão.
 - `imagemIlustrativa`: imagem de vitrine, sempre com o selo "Imagem ilustrativa". Troque por uma foto real quando houver.
