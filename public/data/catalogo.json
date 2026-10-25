@@ -10,7 +10,7 @@
     {
       "id": "pet",
       "nome": "Tapetes pet personalizados",
-      "descricao": "Tapete de 40 × 60 cm com a foto do seu cão ou gato.",
+      "descricao": "Escolha o modelo ideal e personalize com o nome ou a foto do seu pet.",
       "rota": "#/tapetes-pet"
     }
   ],
@@ -76,10 +76,104 @@
       ]
     },
     {
+      "id": "comedouro",
+      "categoria": "pet",
+      "nome": "Comedouro personalizado",
+      "descricao": "Um cantinho especial para a hora da refeição. Personalize o tapete do seu pet com nome, cores e temas exclusivos.",
+      "publicado": true,
+      "_incluiPotes": "true: os potes acompanham; false: não acompanham; null: ainda não definido (o site pede para consultar a loja).",
+      "incluiPotes": null,
+      "imagemIlustrativa": "assets/pet/comedouro-ilustrativo.jpg",
+      "personalizacao": {
+        "tipo": "texto",
+        "textoObrigatorio": true,
+        "textoMax": 14,
+        "rotuloTexto": "Nome do pet ou frase curta",
+        "dicaTexto": "Curto fica mais legível no tapete.",
+        "temas": [
+          {
+            "id": "grafite",
+            "nome": "Grafite",
+            "cores": {
+              "fundo": "#3a3d42",
+              "faixa": "#23252a",
+              "patinhas": "#4d5157",
+              "texto": "#ffffff",
+              "destaque": "#e7b98b"
+            }
+          },
+          {
+            "id": "empire",
+            "nome": "Ciano Empire",
+            "cores": {
+              "fundo": "#111315",
+              "faixa": "#00ffce",
+              "patinhas": "#23272b",
+              "texto": "#000000",
+              "destaque": "#000000"
+            }
+          },
+          {
+            "id": "rosa",
+            "nome": "Rosa",
+            "cores": {
+              "fundo": "#f4b6c8",
+              "faixa": "#d9668a",
+              "patinhas": "#eaa0b6",
+              "texto": "#ffffff",
+              "destaque": "#ffffff"
+            }
+          },
+          {
+            "id": "areia",
+            "nome": "Areia",
+            "cores": {
+              "fundo": "#e8d8bd",
+              "faixa": "#8a6a45",
+              "patinhas": "#d8c4a3",
+              "texto": "#ffffff",
+              "destaque": "#f3e6cf"
+            }
+          },
+          {
+            "id": "azul",
+            "nome": "Azul",
+            "cores": {
+              "fundo": "#9cc7e8",
+              "faixa": "#2c5d8a",
+              "patinhas": "#86b6dc",
+              "texto": "#ffffff",
+              "destaque": "#ffffff"
+            }
+          }
+        ]
+      },
+      "modelos": [
+        {
+          "id": "padrao",
+          "nome": "Comedouro personalizado",
+          "descricao": "Tapete para colocar embaixo dos potes de água e ração.",
+          "dimensoes": {
+            "larguraCm": null,
+            "alturaCm": null,
+            "rotulo": "Tamanho a definir"
+          },
+          "preco": null,
+          "disponibilidade": "sob_encomenda",
+          "publicado": true,
+          "imagens": [],
+          "previa": {
+            "proporcao": 1.6,
+            "provisoria": true
+          }
+        }
+      ]
+    },
+    {
       "id": "tapete-pet",
       "categoria": "pet",
-      "nome": "Tapete pet personalizado",
-      "descricao": "Para cães e gatos, com a foto do seu animal.",
+      "nome": "Tapete com o rosto do seu pet",
+      "descricao": "Transforme a foto do seu cão ou gato em um tapete exclusivo, criado especialmente para você.",
       "publicado": true,
       "personalizacao": {
         "tipo": "upload_obrigatorio",
@@ -122,7 +216,8 @@
             "moldura": null
           }
         }
-      ]
+      ],
+      "imagemIlustrativa": "assets/vitrine/tapete-pet-ilustrativo.jpg"
     }
   ],
   "artes": [

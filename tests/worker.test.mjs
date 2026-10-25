@@ -93,10 +93,22 @@ test("valida o pedido e calcula o total com os preços do catálogo, ignorando o
   assert.equal(r.pedido.itens[0].modeloNome, "Mousepad Standard");
   assert.equal(r.pedido.cliente.aceitaWhatsApp, true);
   const semPreco = catalogoComPrecos();
-  semPreco.produtos[1].modelos[0].preco = null;
+  semPreco.produtos.find(p => p.id === "tapete-pet").modelos[0].preco = null;
   const r2 = validarPedido(pedidoBase(), semPreco, lojaReal);
   assert.equal(r2.pedido.valores.total, null);
   assert.equal(r2.pedido.valores.precoAConfirmar, true);
+});
+
+test("comedouro guarda o nome e o tema e, sem preço no catálogo, fica a confirmar", () => {
+  const p = pedidoBase();
+  p.itens.push({ produtoId: "comedouro", modeloId: "padrao", quantidade: 2, personalizacaoTexto: "Nome: Bento · Tema: Rosa", fonte: "texto" });
+  const r = validarPedido(p, structuredClone(catalogoReal), lojaReal);
+  const item = r.pedido.itens.at(-1);
+  assert.equal(item.fonte, "texto");
+  assert.equal(item.personalizacaoTexto, "Nome: Bento · Tema: Rosa");
+  assert.equal(item.precoUnitario, null);
+  assert.equal(r.pedido.valores.total, null);
+  assert.equal(r.pedido.valores.precoAConfirmar, true);
 });
 
 test("recusa pedido com dados inválidos", () => {

@@ -288,3 +288,26 @@ main { flex: 1; }
 .cartao-arte .btn { text-align: center; justify-content: center; }
 .tag-provisoria { display: block; font-size: .7rem; font-weight: 600; color: var(--color-muted); }
 .dica-artes { font-size: .85rem; color: var(--color-muted); margin: 8px 0 0; }
+
+/* Tapetes pet: as duas categorias (comedouros e tapetes com foto) */
+.cartao .midia { position: relative; }
+.categorias-pet { display: grid; gap: 20px; }
+@media (min-width: 860px) { .categorias-pet { grid-template-columns: 1fr 1fr; gap: 24px; } }
+.cartao-pet { background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.cartao-pet .midia { position: relative; aspect-ratio: 16 / 10; background: var(--color-gray-light); overflow: hidden; }
+.cartao-pet .midia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cartao-pet .corpo { padding: 20px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.cartao-pet h2 { margin: 0; font-size: 1.35rem; }
+.cartao-pet .corpo > p { margin: 0; color: var(--color-muted); }
+.cartao-pet .btn { margin-top: auto; }
+.lista-check { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lista-check li { position: relative; padding-left: 28px; }
+.lista-check li::before { content: "✓"; position: absolute; left: 0; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--color-black); color: var(--color-primary); font-size: .75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.beneficios { list-style: none; margin: 28px 0 0; padding: 16px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); background: var(--color-gray-light); border-radius: var(--radius); }
+.beneficios li { display: flex; flex-direction: column; gap: 2px; border-left: 3px solid var(--color-primary); padding-left: 12px; min-width: 0; }
+.beneficios span { color: var(--color-muted); font-size: .95rem; overflow-wrap: anywhere; }
+.beneficios a { color: var(--color-black); font-weight: 600; }
+/* temas do comedouro */
+.temas { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.opcao-tema { flex-direction: row; align-items: center; gap: 10px; }
+.opcao-tema .amostra { width: 30px; height: 30px; flex: none; border-radius: 8px; border: 1px solid var(--color-border); }
