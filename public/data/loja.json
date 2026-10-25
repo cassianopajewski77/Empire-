@@ -25,7 +25,7 @@
   },
   "pedidos": {
     "_leia": "Canal para onde o pedido é enviado. Sem número configurado, o site prepara o pedido mas não envia. Formato: DDI + DDD + número, só dígitos (ex.: 5541999999999).",
-    "whatsapp": null
+    "whatsapp": "5541996907357"
   },
   "contato": {
     "email": null,

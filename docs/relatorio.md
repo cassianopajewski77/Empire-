@@ -29,7 +29,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Preços | Todos `null`: aparece "Preço a definir" e o total fica "A definir". |
 | Pagamento Pix | Modo `demonstracao`: o site avisa que o pagamento não está configurado. Não gera QR Code nem mostra chave, e nunca marca pagamento como confirmado. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
-| Envio do pedido | Sem `pedidos.whatsapp` configurado, o site avisa que o pedido **não foi enviado** e oferece baixar o resumo e as imagens. Com o número, aparece o botão "Enviar pedido pelo WhatsApp". |
+| Envio do pedido | WhatsApp configurado: (41) 99690-7357. Depois de confirmar, o cliente toca em "Enviar pedido pelo WhatsApp" e anexa as imagens baixadas. Sem número, o site avisaria que o pedido **não foi enviado**. |
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
@@ -53,7 +53,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 7. O que é preciso para vender de verdade
 
-1. Definir os preços (`public/data/catalogo.json`) e o número do WhatsApp (`public/data/loja.json`).
+1. Definir os preços (`public/data/catalogo.json`).
 2. Decidir o pagamento: Pix manual (mais simples) ou um provedor com Pix. A conta e o contrato precisam estar no nome de um adulto responsável, porque o Murilo é menor de idade.
 3. Para pedidos guardados com segurança: um backend (por exemplo, Cloudflare Pages Functions) com banco de dados (D1) e armazenamento privado das imagens (R2), um painel protegido por senha para a loja, e o webhook autenticado do provedor de pagamento para confirmar o Pix no servidor.
 4. Cadastrar descrição, preço e imagem de referência dos Modelos Clássico e Divertido.

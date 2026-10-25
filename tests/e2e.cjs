@@ -233,7 +233,14 @@ async function cenario(nome, fn) {
     await page.click("[data-confirmar]");
     await page.waitForURL(/#\/pedido/);
     assert.match(await page.textContent(".status-pedido"), /Aguardando pagamento/);
-    assert.match(await page.textContent("main"), /ainda não foi enviado/);
+    const whats = await page.evaluate(() => fetch("data/loja.json").then(r => r.json()).then(l => l.pedidos.whatsapp));
+    if (whats) {
+      const link = await page.getAttribute("a:has-text('Enviar pedido pelo WhatsApp')", "href");
+      assert.ok(link.startsWith(`https://wa.me/${whats}?text=`));
+      assert.match(decodeURIComponent(link), /Pedido EMP-[A-Z0-9]{6}/);
+    } else {
+      assert.match(await page.textContent("main"), /ainda não foi enviado/);
+    }
     assert.doesNotMatch(await page.textContent("main"), /Pagamento confirmado/);
     const pedido = await page.evaluate(() => JSON.parse(localStorage.getItem("empire-ultimo-pedido")));
     assert.equal(pedido.status, "aguardando_pagamento");
