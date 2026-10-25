@@ -75,7 +75,7 @@ export async function gerarPrevia(blob, { codigo, numero, titulo, detalhe }) {
   ctx.textBaseline = "top";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "800 38px Inter, system-ui, sans-serif";
-  ctx.fillText(linhaCortada(ctx, `Pedido ${codigo} · item ${numero}`, areaL), margem, y + 26);
+  ctx.fillText(linhaCortada(ctx, codigo ? `Pedido ${codigo} · item ${numero}` : "Prévia do seu produto", areaL), margem, y + 26);
   ctx.font = "600 28px Inter, system-ui, sans-serif";
   ctx.fillStyle = "#E5E7EB";
   ctx.fillText(linhaCortada(ctx, titulo, areaL), margem, y + 74);

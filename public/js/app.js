@@ -6,7 +6,7 @@ import { Personalizador, carregarImagem } from "./personalizador.js";
 import { PersonalizadorComedouro } from "./comedouro.js";
 import { montarPedido, codigoPedido, STATUS, podeMudarStatus } from "./pedidos.js";
 import { lerImagem, apagarImagem } from "./imagens.js";
-import { enviarPrevias, linkPrevia } from "./previa-pedido.js";
+import { enviarPrevias, linkPrevia, gerarPrevia } from "./previa-pedido.js";
 import { buscarCep, mascaraCep } from "./cep.js";
 
 const main = document.getElementById("conteudo");
@@ -476,7 +476,8 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
           <div class="linha-preco"><span>Preço unitário</span><strong>${brl(m.preco)}</strong></div>
           ${typeof m.preco !== "number" ? `<p class="aviso">O preço deste produto ainda será definido pela loja. Você pode montar o pedido e o valor será confirmado antes do pagamento.</p>` : ""}
           <p class="msg-campo" data-pendencia role="alert"></p>
-          <button type="button" class="btn btn-primario btn-bloco" data-adicionar>Adicionar ao carrinho</button>
+          <button type="button" class="btn btn-primario btn-bloco" data-adicionar>Ver prévia e adicionar</button>
+          <p class="dica-artes" style="text-align:center">Antes de ir para o carrinho, você confere a prévia e aprova.</p>
         </div>
       </div>
     </div>`;
@@ -530,6 +531,7 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
   qtd.addEventListener("change", () => { qtd.value = carrinho.limitar(qtd.value); });
 
   const botao = main.querySelector("[data-adicionar]");
+  const textoBotao = botao.textContent;
   botao.addEventListener("click", async () => {
     const est = pz.estado();
     const pend = main.querySelector("[data-pendencia]");
@@ -538,10 +540,11 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
       return;
     }
     botao.disabled = true;
-    botao.textContent = "Adicionando…";
+    botao.textContent = "Gerando a prévia…";
+    let pronto;
     try {
       const { blob, miniatura, largura, altura } = await pz.exportar();
-      await carrinho.adicionar({
+      const item = {
         produtoId: p.id,
         produtoNome: p.nome,
         modeloId: m.id,
@@ -562,15 +565,74 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
           ajuste: est.ajuste,
           imagemFinalPx: { largura, altura },
         },
-      }, blob);
+      };
+      const previa = await gerarPrevia(blob, {
+        titulo: `${p.nome}: ${m.nome}${m.dimensoes?.rotulo ? " · " + m.dimensoes.rotulo : ""}`,
+        detalhe: descricaoPersonalizacao(item.personalizacao),
+      });
+      pronto = { item, blob, previa };
+    } catch (e) {
+      console.error(e);
+      pend.textContent = "Não foi possível gerar a prévia. Tente de novo.";
+      botao.disabled = false;
+      botao.textContent = textoBotao;
+      return;
+    }
+    botao.disabled = false;
+    botao.textContent = textoBotao;
+    const escolha = await confirmarPrevia(pronto.previa, { comFoto: est.fonte === "upload" });
+    if (escolha === "rejeitar") {
+      if (est.fonte === "upload") pz.removerImagem?.();
+      pend.textContent = est.fonte === "upload" ? "Prévia rejeitada. Envie outra foto." : "Prévia rejeitada. Faça outra escolha.";
+      main.querySelector("[data-controles] input, [data-controles] button")?.focus();
+      return;
+    }
+    if (escolha !== "aprovar") {
+      pend.textContent = "Ajuste a imagem e veja a prévia de novo.";
+      main.querySelector(".previa-palco canvas")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      return;
+    }
+    botao.disabled = true;
+    botao.textContent = "Adicionando…";
+    try {
+      pronto.item.personalizacao.previaAprovada = { em: new Date().toISOString() };
+      await carrinho.adicionar(pronto.item, pronto.blob);
       avisar(`${m.nome} adicionado ao carrinho.`);
       location.hash = "#/carrinho";
     } catch (e) {
       console.error(e);
       pend.textContent = "Não foi possível adicionar ao carrinho. Verifique se o navegador permite salvar dados neste site e tente de novo.";
       botao.disabled = false;
-      botao.textContent = "Adicionar ao carrinho";
+      botao.textContent = textoBotao;
     }
+  });
+}
+
+/**
+ * Mostra a prévia gerada e espera a decisão do cliente.
+ * @returns {Promise<"aprovar"|"refazer"|"rejeitar">}
+ */
+function confirmarPrevia(previa, { comFoto }) {
+  return new Promise(ok => {
+    const dlg = document.createElement("dialog");
+    dlg.className = "dialogo-previa";
+    dlg.setAttribute("aria-labelledby", "titulo-previa");
+    dlg.innerHTML = `
+      <h2 id="titulo-previa">Confira a prévia</h2>
+      <p>É assim que o seu produto vai ser produzido. Confira o enquadramento antes de aprovar.</p>
+      <img src="${previa}" alt="Prévia do produto personalizado" data-previa-gerada>
+      <p class="aviso-previa"><strong>Prévia ilustrativa.</strong> A peça impressa pode ter pequenas diferenças de cor.</p>
+      <div class="acoes-previa">
+        <button type="button" class="btn btn-primario" data-escolha="aprovar">Aprovar e adicionar ao carrinho</button>
+        <button type="button" class="btn btn-contorno" data-escolha="refazer">Refazer ajustes</button>
+        <button type="button" class="btn btn-texto" data-escolha="rejeitar">${comFoto ? "Rejeitar e trocar a foto" : "Rejeitar"}</button>
+      </div>`;
+    document.body.append(dlg);
+    let escolha = "refazer";
+    dlg.querySelectorAll("[data-escolha]").forEach(b => b.addEventListener("click", () => { escolha = b.dataset.escolha; dlg.close(); }));
+    dlg.addEventListener("close", () => { dlg.remove(); ok(escolha); });
+    dlg.showModal();
+    dlg.querySelector("[data-escolha=aprovar]").focus();
   });
 }
 
@@ -633,6 +695,7 @@ function paginaCarrinho() {
                 <strong>${esc(i.produtoNome)}: ${esc(i.modeloNome)}</strong>
                 <small>${esc(i.dimensoes?.rotulo || "")}</small>
                 <small>${esc(descricaoPersonalizacao(i.personalizacao))}</small>
+                ${i.personalizacao?.previaAprovada ? `<small class="ok-previa" data-previa-aprovada>✓ Prévia aprovada</small>` : ""}
                 <small>Preço unitário: ${brl(i.precoUnitario)}</small>
               </div>
               <div class="acoes-item">
@@ -925,7 +988,7 @@ async function registrarNoServidor(p) {
           cliente: p.cliente,
           endereco: p.endereco,
           observacoes: p.observacoes,
-          itens: p.itens.map(i => ({ produtoId: i.produtoId, modeloId: i.modeloId, quantidade: i.quantidade, fonte: i.personalizacao?.fonte, personalizacaoTexto: descricaoPersonalizacao(i.personalizacao) })),
+          itens: p.itens.map(i => ({ produtoId: i.produtoId, modeloId: i.modeloId, quantidade: i.quantidade, fonte: i.personalizacao?.fonte, personalizacaoTexto: descricaoPersonalizacao(i.personalizacao), previaAprovada: Boolean(i.personalizacao?.previaAprovada) })),
         }),
       });
       const r = await resp.json().catch(() => ({}));
@@ -968,7 +1031,7 @@ function textoPedido(p) {
   L.push("");
   p.itens.forEach((i, n) => {
     L.push(`${n + 1}. ${i.produtoNome}: ${i.modeloNome} (${i.dimensoes?.rotulo || ""})`);
-    L.push(`   ${descricaoPersonalizacao(i.personalizacao)}`);
+    L.push(`   ${descricaoPersonalizacao(i.personalizacao)}${i.personalizacao?.previaAprovada ? " · prévia aprovada pelo cliente" : ""}`);
     L.push(`   Quantidade: ${i.quantidade} · Unitário: ${brl(i.precoUnitario, "a definir")}`);
     if (i.previaEnviada && p.chave) L.push(`   Prévia: ${linkPrevia(p, n)}`);
   });

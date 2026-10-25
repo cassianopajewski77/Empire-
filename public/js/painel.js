@@ -164,7 +164,7 @@ async function telaPedido(codigo) {
           <h2>Produtos</h2>
           <div class="rolagem-x"><table class="tabela-resumo">
             <thead><tr><th>Produto</th><th class="num">Qtd.</th><th class="num">Unitário</th></tr></thead>
-            <tbody>${p.itens.map(i => `<tr><td><strong>${esc(i.produtoNome)}: ${esc(i.modeloNome)}</strong><br><small>${esc(i.dimensoes?.rotulo || "")}${i.personalizacaoTexto ? " · " + esc(i.personalizacaoTexto) : ""}</small></td><td class="num">${i.quantidade}</td><td class="num">${brl(i.precoUnitario, "A definir")}</td></tr>`).join("")}</tbody>
+            <tbody>${p.itens.map(i => `<tr><td><strong>${esc(i.produtoNome)}: ${esc(i.modeloNome)}</strong><br><small>${esc(i.dimensoes?.rotulo || "")}${i.personalizacaoTexto ? " · " + esc(i.personalizacaoTexto) : ""}${i.previaAprovada ? " · <strong>prévia aprovada pelo cliente</strong>" : ""}</small></td><td class="num">${i.quantidade}</td><td class="num">${brl(i.precoUnitario, "A definir")}</td></tr>`).join("")}</tbody>
           </table></div>
           <p style="margin:10px 0 0"><strong>Total: ${brl(p.valores.total, "a definir")}</strong> · Entrega: ${esc(p.valores.frete != null ? brl(p.valores.frete) : p.valores.entregaMensagem)}</p>
           ${p.itens.some(i => i.previa) ? `<h3 style="font-size:1rem;margin:16px 0 8px">Prévias anexadas ao pedido</h3><div class="previas-pedido">${p.itens.map((i, n) => i.previa ? `<figure><a data-previa-link="${n}" download="${esc(p.codigo)}-item${n + 1}.jpg"><img data-previa-img="${n}" alt="Prévia do item ${n + 1}: ${esc(i.produtoNome)}, ${esc(i.modeloNome)}"></a><figcaption>Item ${n + 1}: ${esc(i.modeloNome)} · toque para baixar</figcaption></figure>` : "").join("")}</div>` : ""}
