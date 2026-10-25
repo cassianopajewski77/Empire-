@@ -109,6 +109,7 @@ export function validarPedido(corpo, catalogo, loja) {
       precoUnitario: preco,
       fonte: ["upload", "arte", "texto"].includes(item.fonte) ? item.fonte : null,
       personalizacaoTexto: texto(item.personalizacaoTexto, 120) || null,
+      previaAprovada: item.previaAprovada === true,
     });
   }
   const entrega = loja.entrega || {};

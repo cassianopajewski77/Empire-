@@ -107,6 +107,12 @@ async function cenario(nome, fn) {
 
   const irPara = async hash => { await page.goto(base + hash); await page.waitForSelector("main > *:not(noscript)"); };
   const itensCarrinho = () => page.evaluate(() => JSON.parse(localStorage.getItem("empire-carrinho-v1") || "[]"));
+  // gera a prévia e aprova, como o cliente faz antes de ir para o carrinho
+  const adicionarAprovando = async () => {
+    await page.click("[data-adicionar]");
+    await page.waitForSelector("dialog.dialogo-previa[open] [data-previa-gerada]");
+    await page.click("[data-escolha=aprovar]");
+  };
   const limpar = async () => { await page.evaluate(() => localStorage.clear()); };
 
   await irPara("#/");
@@ -142,7 +148,7 @@ async function cenario(nome, fn) {
     await page.click("label.opcao:has(input[value=arte])");
     await page.click("label.opcao-arte:has(input[value=cyber-empire])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     const itens = await itensCarrinho();
     assert.equal(itens.length, 1);
@@ -163,7 +169,7 @@ async function cenario(nome, fn) {
     const box = await page.locator(".previa-palco canvas").boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 - 40, box.y + box.height / 2); await page.mouse.up();
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     const itens = await itensCarrinho();
     const novo = itens.at(-1);
@@ -199,12 +205,39 @@ async function cenario(nome, fn) {
     // substituir a foto antes de adicionar
     await page.setInputFiles("[data-arquivo]", { name: "mia.png", mimeType: "image/png", buffer: await gerarPNG(page, "#663399", 2400, 1600) });
     await page.waitForFunction(() => document.querySelector("[data-nome]").textContent === "mia.png");
+    // a prévia aparece antes do carrinho, na proporção do tapete (60 × 40 + legenda)
+    const antes = (await itensCarrinho()).length;
     await page.click("[data-adicionar]");
+    await page.waitForSelector("dialog.dialogo-previa[open] [data-previa-gerada]");
+    await page.waitForFunction(() => document.querySelector("[data-previa-gerada]").naturalWidth > 0);
+    const dim = await page.$eval("[data-previa-gerada]", i => [i.naturalWidth, i.naturalHeight]);
+    assert.equal(dim[0], 1200);
+    assert.ok(Math.abs(dim[1] - (1120 * 40 / 60 + 80 + 150)) <= 3, `altura da prévia ${dim[1]}`);
+    // refazer: fecha a prévia, mantém a foto e não adiciona nada
+    await page.click("[data-escolha=refazer]");
+    await page.waitForSelector("dialog.dialogo-previa", { state: "detached" });
+    assert.equal((await itensCarrinho()).length, antes);
+    assert.match(page.url(), /tapete-pet\/divertido/);
+    assert.equal(await page.textContent("[data-nome]"), "mia.png");
+    // rejeitar: tira a foto e pede outra
+    await page.click("[data-adicionar]");
+    await page.waitForSelector("dialog.dialogo-previa[open]");
+    await page.click("[data-escolha=rejeitar]");
+    await page.waitForSelector("dialog.dialogo-previa", { state: "detached" });
+    assert.match(await page.textContent("[data-pendencia]"), /Prévia rejeitada/);
+    assert.ok(await page.isHidden("[data-ajustes]"));
+    assert.equal((await itensCarrinho()).length, antes);
+    // nova foto e aprovação
+    await page.setInputFiles("[data-arquivo]", { name: "mia.png", mimeType: "image/png", buffer: await gerarPNG(page, "#663399", 2400, 1600) });
+    await page.waitForSelector("[data-ajustes]:not([hidden])");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
+    await page.waitForSelector("[data-previa-aprovada]");
     const novo = (await itensCarrinho()).at(-1);
     assert.equal(novo.modeloNome, "Modelo Divertido");
     assert.equal(novo.personalizacao.arquivo.nome, "mia.png");
     assert.equal(novo.dimensoes.rotulo, "40 × 60 cm");
+    assert.ok(novo.personalizacao.previaAprovada?.em, "a prévia foi aprovada pelo cliente");
   });
 
   await cenario("Tapetes pet: duas categorias, botões e informações reais", async () => {
@@ -261,13 +294,13 @@ async function cenario(nome, fn) {
     assert.notEqual(await quadro(), comNome);
     assert.equal(await page.inputValue("#nome-pet"), "Bento");
     await page.click("[data-qtd='1']");
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     // segundo comedouro, com outro nome e tema
     await irPara("#/personalizar/comedouro/padrao");
     await page.fill("#nome-pet", "Mia e Tom");
     await page.click("label.opcao-tema:has(input[value=azul])");
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     const itens = await itensCarrinho();
     assert.equal(itens.length, 2);
@@ -289,7 +322,7 @@ async function cenario(nome, fn) {
       await page.click("label.opcao:has(input[value=upload])");
       await page.setInputFiles("[data-arquivo]", { name: nome, mimeType: "image/png", buffer: await gerarPNG(page, cor) });
       await page.waitForSelector("[data-ajustes]:not([hidden])");
-      await page.click("[data-adicionar]");
+      await adicionarAprovando();
       await page.waitForURL(/#\/carrinho/);
     }
     const itens = await itensCarrinho();
@@ -354,7 +387,7 @@ async function cenario(nome, fn) {
     await page.click("label.opcao:has(input[value=arte])");
     await page.click("label.opcao-arte:has(input[value=marmore])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     await page.click("text=Finalizar compra");
     await page.click("button:has-text('Revisar pedido')");
@@ -410,6 +443,7 @@ async function cenario(nome, fn) {
     // a prévia do produto foi gerada e anexada ao pedido na loja
     assert.equal(pedido.itens[0].previaEnviada, true);
     assert.equal((await env.PEDIDOS.instancia.obter(pedido.codigo)).itens[0].previa, true);
+    assert.equal((await env.PEDIDOS.instancia.obter(pedido.codigo)).itens[0].previaAprovada, true);
     const salva = await env.PEDIDOS.instancia.lerPrevia(pedido.codigo, 0);
     assert.equal(salva.tipo, "image/jpeg");
     await page.waitForFunction(() => { const i = document.querySelector("[data-previa-item='0'] img"); return i && i.complete && i.naturalWidth > 0; });
@@ -427,7 +461,7 @@ async function cenario(nome, fn) {
     await page.click("label.opcao:has(input[value=arte])");
     await page.click("label.opcao-arte:has(input[value=galaxia])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     await page.click("text=Finalizar compra");
     await page.evaluate(() => sessionStorage.clear());
@@ -464,7 +498,7 @@ async function cenario(nome, fn) {
     await page.click("label.opcao-arte:has(input[value=cyber-empire])");
     await page.waitForSelector("[data-ajustes]:not([hidden])");
     await page.click("[data-qtd='1']");
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     await page.click("text=Finalizar compra");
     await page.fill("#nome", "Cliente Pix");
@@ -630,7 +664,7 @@ async function cenario(nome, fn) {
     await page.click("label.opcao:has(input[name=modelo][value=p])");
     await page.waitForURL(/#\/personalizar\/mousepad\/p\?arte=cyber-empire$/);
     await page.waitForFunction(() => /22 × 18 cm/.test(document.querySelector("[data-legenda]")?.textContent || "") && !document.querySelector("[data-ajustes]").hidden);
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     const itens = await itensCarrinho();
     const ultimo = itens[itens.length - 1];
@@ -678,7 +712,7 @@ async function cenario(nome, fn) {
     await page.click("label.opcao:has(input[name=modelo][value=g])");
     await page.waitForURL(/#\/personalizar\/mousepad\/g\?arte=time-coritiba$/);
     await page.waitForFunction(() => /90 × 40 cm/.test(document.querySelector("[data-legenda]")?.textContent || "") && !document.querySelector("[data-ajustes]").hidden);
-    await page.click("[data-adicionar]");
+    await adicionarAprovando();
     await page.waitForURL(/#\/carrinho/);
     const itens = await itensCarrinho();
     const ultimo = itens[itens.length - 1];

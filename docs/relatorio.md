@@ -30,6 +30,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido); comedouro R$ 69,90. |
 | Pagamento Pix | Modo `mercadopago` (escolha do Cassiano): o servidor da loja (`src/worker.js`) cria a cobrança Pix no Mercado Pago com o valor calculado a partir do catálogo, e o site mostra o QR Code e o copia e cola. A página consulta o status pelo servidor e marca "Pagamento confirmado" só quando o Mercado Pago responde `approved`. Sem o segredo `MP_ACCESS_TOKEN` ou sem preço definido, o site avisa e manda combinar pelo WhatsApp. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
+| Aprovação da prévia | Em todos os produtos personalizados (foto, arte da loja ou nome do comedouro), o botão "Ver prévia e adicionar" gera a prévia do produto na proporção real e abre uma janela com três opções: **Aprovar e adicionar ao carrinho**, **Refazer ajustes** (volta para ajustar, sem perder a foto) e **Rejeitar e trocar a foto** (tira a foto e pede outra). Só itens aprovados entram no carrinho; o carrinho mostra "✓ Prévia aprovada", e o pedido no painel e na mensagem de WhatsApp indica "prévia aprovada pelo cliente". |
 | Envio do pedido | O pedido é registrado no servidor da loja e aparece no painel. Ao confirmar, o site gera a prévia de cada item personalizado (até 1200 px, com o código do pedido e a personalização na legenda) e a anexa ao pedido (`POST /api/pedidos/:codigo/previas/:n`, guardada no Durable Object). A prévia aparece na página do pedido, no painel (para baixar) e como link na mensagem de WhatsApp. A foto original em alta resolução continua indo pelo WhatsApp (41) 99690-7357. |
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
@@ -87,7 +88,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 2. Mousepad com arte pronta, sem enviar imagem.
 3. Mousepad com imagem própria, zoom, setas e arrastar.
 4. Tapete pet sem foto: o site bloqueia e mostra a mensagem.
-5. Tapete pet com foto, incluindo a troca da foto antes de adicionar.
+5. Tapete pet com foto, incluindo a troca da foto antes de adicionar e a prévia para aprovação (tamanho certo, refazer sem perder a foto, rejeitar tirando a foto, aprovar e ver "Prévia aprovada" no carrinho).
 6. Dois mousepads iguais com imagens diferentes ficam separados, e mudar um não altera o outro.
 7. Quantidades recalculam subtotal e total.
 8. Arquivo inválido, grande demais ou corrompido é recusado com mensagem.
