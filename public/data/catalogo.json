@@ -1,0 +1,155 @@
+{
+  "_leia": "Catálogo da loja. Edite este arquivo para mudar produtos sem reconstruir o site. preco: número em reais ou null (aparece 'Preço a definir'). disponibilidade: 'sob_encomenda', 'pronta_entrega' ou 'indisponivel'. publicado: false esconde o produto ou modelo.",
+  "categorias": [
+    {
+      "id": "mousepads",
+      "nome": "Mousepads personalizados",
+      "descricao": "Escolha uma arte da loja ou envie a sua imagem: jogos, fotos, paisagens, pets, ilustrações e o que mais você imaginar.",
+      "rota": "#/mousepads"
+    },
+    {
+      "id": "pet",
+      "nome": "Tapetes pet personalizados",
+      "descricao": "Tapete de 40 × 60 cm com a foto do seu cão ou gato.",
+      "rota": "#/tapetes-pet"
+    }
+  ],
+  "produtos": [
+    {
+      "id": "mousepad",
+      "categoria": "mousepads",
+      "nome": "Mousepad personalizado",
+      "descricao": "Feito de tapete superabsorvente, com a arte que você escolher.",
+      "publicado": true,
+      "personalizacao": {
+        "tipo": "arte_ou_upload",
+        "uploadObrigatorio": false,
+        "permiteArtes": true,
+        "orientacaoUpload": "Use uma imagem nítida. Fotos do celular costumam funcionar bem."
+      },
+      "modelos": [
+        {
+          "id": "p",
+          "nome": "Mousepad P",
+          "descricao": "Feito de retalho de tapete superabsorvente.",
+          "dimensoes": {
+            "larguraCm": 22,
+            "alturaCm": 18,
+            "rotulo": "22 × 18 cm"
+          },
+          "preco": null,
+          "disponibilidade": "sob_encomenda",
+          "publicado": true,
+          "imagens": []
+        },
+        {
+          "id": "m",
+          "nome": "Mousepad M",
+          "descricao": "Feito de retalho de tapete superabsorvente.",
+          "dimensoes": {
+            "larguraCm": 30,
+            "alturaCm": 25,
+            "rotulo": "30 × 25 cm"
+          },
+          "preco": null,
+          "disponibilidade": "sob_encomenda",
+          "publicado": true,
+          "imagens": []
+        },
+        {
+          "id": "g",
+          "nome": "Desk pad G",
+          "descricao": "Peça inteira de material novo, só por encomenda.",
+          "dimensoes": {
+            "larguraCm": 90,
+            "alturaCm": 40,
+            "rotulo": "90 × 40 cm"
+          },
+          "preco": null,
+          "disponibilidade": "sob_encomenda",
+          "publicado": true,
+          "imagens": []
+        }
+      ]
+    },
+    {
+      "id": "tapete-pet",
+      "categoria": "pet",
+      "nome": "Tapete pet personalizado",
+      "descricao": "Para cães e gatos, com a foto do seu animal.",
+      "publicado": true,
+      "personalizacao": {
+        "tipo": "upload_obrigatorio",
+        "uploadObrigatorio": true,
+        "permiteArtes": false,
+        "orientacaoUpload": "Envie uma foto do seu cão ou gato bem iluminada, nítida e de perto. Fotos tiradas com a câmera traseira do celular, sem zoom, dão o melhor resultado."
+      },
+      "modelos": [
+        {
+          "id": "classico",
+          "nome": "Modelo Clássico",
+          "descricao": null,
+          "dimensoes": {
+            "larguraCm": 60,
+            "alturaCm": 40,
+            "rotulo": "40 × 60 cm"
+          },
+          "preco": null,
+          "disponibilidade": "sob_encomenda",
+          "publicado": true,
+          "imagens": [],
+          "previa": {
+            "moldura": null
+          }
+        },
+        {
+          "id": "divertido",
+          "nome": "Modelo Divertido",
+          "descricao": null,
+          "dimensoes": {
+            "larguraCm": 60,
+            "alturaCm": 40,
+            "rotulo": "40 × 60 cm"
+          },
+          "preco": null,
+          "disponibilidade": "sob_encomenda",
+          "publicado": true,
+          "imagens": [],
+          "previa": {
+            "moldura": null
+          }
+        }
+      ]
+    }
+  ],
+  "artes": [
+    {
+      "id": "neon-gamer",
+      "nome": "Neon Gamer",
+      "tema": "Jogos",
+      "imagem": "assets/artes/neon-gamer.jpg",
+      "publicado": true
+    },
+    {
+      "id": "alviverde",
+      "nome": "Alviverde Coxa",
+      "tema": "Futebol",
+      "imagem": "assets/artes/alviverde.jpg",
+      "publicado": true
+    },
+    {
+      "id": "ceu-pastel",
+      "nome": "Céu Pastel",
+      "tema": "Ilustração",
+      "imagem": "assets/artes/ceu-pastel.jpg",
+      "publicado": true
+    },
+    {
+      "id": "abstrato",
+      "nome": "Abstrato Empire",
+      "tema": "Arte abstrata",
+      "imagem": "assets/artes/abstrato.jpg",
+      "publicado": true
+    }
+  ]
+}

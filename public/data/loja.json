@@ -1,0 +1,34 @@
+{
+  "_leia": "Configuração da loja. Valores null ficam como 'a definir' no site. Não coloque senhas, tokens ou chaves secretas aqui: este arquivo é público.",
+  "marca": "Mats & Mouse Pads Empire",
+  "moeda": "BRL",
+  "upload": {
+    "_leia": "Limite de tamanho do arquivo enviado pelo cliente, em MB. Tipos aceitos: JPEG, PNG e WebP.",
+    "tamanhoMaximoMB": 15,
+    "tiposAceitos": ["image/jpeg", "image/png", "image/webp"],
+    "pixelsPorCmMinimo": 40
+  },
+  "entrega": {
+    "_leia": "Enquanto 'configurada' for false, o site mostra a mensagem abaixo e não soma frete ao total.",
+    "configurada": false,
+    "mensagem": "Entrega a combinar.",
+    "valor": null,
+    "prazo": null
+  },
+  "pagamento": {
+    "_leia": "Modos: 'whatsapp' (Pix combinado na conversa do pedido; o site não mostra chave), 'demonstracao' (nenhum pagamento real), 'manual' (Pix manual conferido por um adulto responsável; preencha pixManual) ou 'provedor' (exige backend e webhook do provedor; ainda não implementado).",
+    "modo": "whatsapp",
+    "pixManual": {
+      "chave": null,
+      "titular": null
+    }
+  },
+  "pedidos": {
+    "_leia": "Canal para onde o pedido é enviado. Sem número configurado, o site prepara o pedido mas não envia. Formato: DDI + DDD + número, só dígitos (ex.: 5541999999999).",
+    "whatsapp": "5541996907357"
+  },
+  "contato": {
+    "email": null,
+    "instagram": null
+  }
+}
