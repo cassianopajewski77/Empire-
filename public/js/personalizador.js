@@ -82,7 +82,7 @@ export class Personalizador {
         <legend>Escolha uma arte</legend>
         ${artes.length ? `<div class="opcoes">${artes.map(a => `
           <label class="opcao opcao-arte"><input type="radio" name="arte" value="${esc(a.id)}">
-            <img src="${esc(a.miniatura || a.imagem)}" alt="" loading="lazy" width="300" height="200"><span>${esc(a.nome)}${a.provisoria ? `<small class="tag-provisoria">Provisória</small>` : ""}</span></label>`).join("")}</div>
+            <img src="${esc(a.miniatura || a.imagem)}" alt="" loading="lazy" width="300" height="200"><span>${esc(a.nome)}${a.provisoria ? `<small class="tag-provisoria">Provisória</small>` : a.ilustrativa ? `<small class="tag-provisoria">Imagem ilustrativa</small>` : ""}</span></label>`).join("")}</div>
         ${artes.some(a => a.provisoria) ? `<p class="dica-artes">Artes marcadas como provisórias são imagens de demonstração. A arte final pode ter pequenas diferenças.</p>` : ""}`
           : `<p class="aviso">Nenhuma arte cadastrada no momento. Envie a sua imagem.</p>`}
       </fieldset>` : "";
