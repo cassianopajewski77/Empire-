@@ -37,7 +37,7 @@
             "alturaCm": 18,
             "rotulo": "22 × 18 cm"
           },
-          "preco": null,
+          "preco": 19.90,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
           "imagens": []
@@ -51,7 +51,7 @@
             "alturaCm": 25,
             "rotulo": "30 × 25 cm"
           },
-          "preco": null,
+          "preco": 24.90,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
           "imagens": []
@@ -65,7 +65,7 @@
             "alturaCm": 40,
             "rotulo": "90 × 40 cm"
           },
-          "preco": null,
+          "preco": 109.90,
           "disponibilidade": "sob_encomenda",
           "publicado": true,
           "imagens": []

@@ -389,12 +389,17 @@ async function cenario(nome, fn) {
       p.codigo = "EMP-SEMPR2"; p.status = "aguardando_pagamento"; p.pagamento = { metodo: "pix", modo: "mercadopago", confirmado: false };
       localStorage.setItem("empire-ultimo-pedido", JSON.stringify(p)); return p;
     });
-    await page.goto(base + "#/"); await page.reload();
-    await irPara("#/pedido");
-    await page.waitForFunction(() => /Não foi possível gerar o Pix/.test(document.querySelector("[data-mp]")?.textContent || ""), null, { timeout: 8000 })
-      .catch(async e => { throw new Error(e.message + " | " + (await page.textContent("main")).replace(/\s+/g, " ").slice(0, 400)); });
-    assert.match(await page.textContent("[data-mp]"), /preço/);
-    assert.ok(pedido);
+    precosTeste = { p: null, m: null, g: null };
+    try {
+      await page.goto(base + "#/"); await page.reload();
+      await irPara("#/pedido");
+      await page.waitForFunction(() => /Não foi possível gerar o Pix/.test(document.querySelector("[data-mp]")?.textContent || ""), null, { timeout: 8000 })
+        .catch(async e => { throw new Error(e.message + " | " + (await page.textContent("main")).replace(/\s+/g, " ").slice(0, 400)); });
+      assert.match(await page.textContent("[data-mp]"), /preço/);
+      assert.ok(pedido);
+    } finally {
+      precosTeste = null;
+    }
   });
 
   await cenario("Layout sem rolagem horizontal no celular", async () => {
