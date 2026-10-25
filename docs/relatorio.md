@@ -28,7 +28,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Item | Situação no site |
 | --- | --- |
 | Preços | Todos `null`: aparece "Preço a definir" e o total fica "A definir". |
-| Pagamento Pix | Modo `whatsapp` (escolha do Cassiano): o site não mostra chave nem QR Code e explica que a chave Pix e o valor são enviados na conversa do pedido. Nunca marca pagamento como confirmado. O modo `demonstracao` continua disponível. Se um dia o site mostrar uma chave, use uma chave aleatória, nunca o CPF do Murilo. |
+| Pagamento Pix | Modo `mercadopago` (escolha do Cassiano): o servidor da loja (`src/worker.js`) cria a cobrança Pix no Mercado Pago com o valor calculado a partir do catálogo, e o site mostra o QR Code e o copia e cola. A página consulta o status pelo servidor e marca "Pagamento confirmado" só quando o Mercado Pago responde `approved`. Sem o segredo `MP_ACCESS_TOKEN` ou sem preço definido, o site avisa e manda combinar pelo WhatsApp. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
 | Envio do pedido | WhatsApp configurado: (41) 99690-7357. Depois de confirmar, o cliente toca em "Enviar pedido pelo WhatsApp" e anexa as imagens baixadas. Sem número, o site avisaria que o pedido **não foi enviado**. |
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
@@ -46,6 +46,14 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 - Os textos do cliente são escapados antes de aparecer na tela, e os arquivos enviados são validados por tipo (JPEG, PNG, WebP), tamanho (15 MB, configurável) e leitura real da imagem.
 - A página de privacidade descreve o funcionamento real e não afirma conformidade com a LGPD.
 
+## 5.1 Pix pelo Mercado Pago
+
+- `POST /api/pix` recebe só o código do pedido, o nome, o e-mail e os itens (produto, modelo e quantidade). O preço vem do catálogo no servidor, nunca do navegador.
+- A chave de idempotência (`código-tentativa`) impede cobrança em dobro se o cliente tocar duas vezes ou recarregar a página.
+- `GET /api/pix/:id?ref=CÓDIGO` consulta o Mercado Pago e só responde se o pagamento for daquele pedido.
+- O token fica no segredo `MP_ACCESS_TOKEN` da Cloudflare. Ele não aparece no código, no navegador nem nas respostas.
+- Ainda não há webhook: a confirmação depende da página do pedido estar aberta. O Mercado Pago avisa a loja por e-mail e no app a cada Pix recebido, e o pagamento fica registrado lá de qualquer forma.
+
 ## 6. Limitações atuais (importante)
 
 1. **Os pedidos não são salvos em servidor.** O resumo e as imagens ficam no navegador do cliente até ele enviar para a loja. Se o cliente limpar o navegador antes de enviar, o pedido se perde.
@@ -55,14 +63,14 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 ## 7. O que é preciso para vender de verdade
 
 1. Definir os preços (`public/data/catalogo.json`).
-2. Decidir o pagamento: Pix manual (mais simples) ou um provedor com Pix. A conta e o contrato precisam estar no nome de um adulto responsável, porque o Murilo é menor de idade.
-3. Para pedidos guardados com segurança: um backend (por exemplo, Cloudflare Pages Functions) com banco de dados (D1) e armazenamento privado das imagens (R2), um painel protegido por senha para a loja, e o webhook autenticado do provedor de pagamento para confirmar o Pix no servidor.
+2. Cadastrar o token de produção do Mercado Pago como segredo `MP_ACCESS_TOKEN` na Cloudflare. A conta é do Cassiano, adulto responsável.
+3. Para pedidos guardados com segurança: banco de dados (D1) e armazenamento privado das imagens (R2) no mesmo Worker, um painel protegido por senha para a loja, e o webhook assinado do Mercado Pago para confirmar o Pix mesmo com a página fechada.
 4. Cadastrar descrição, preço e imagem de referência dos Modelos Clássico e Divertido.
 5. Revisar a política de privacidade quando os dados passarem a ser guardados em servidor.
 
 ## 8. Testes
 
-`npm test` roda 13 cenários no Chromium em tela de celular:
+`npm test` roda 8 testes do servidor (`tests/worker.test.mjs`) e 15 cenários no Chromium em tela de celular:
 
 1. Página inicial com marca, chamadas e categorias.
 2. Mousepad com arte pronta, sem enviar imagem.
@@ -76,8 +84,10 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 10. Checkout valida os campos, mantém os dados ao voltar e cria o pedido em "Aguardando pagamento", sem confirmar pagamento.
 11. Nenhuma página tem rolagem horizontal no celular.
 12. CEP preenche o endereço (com o ViaCEP simulado), avisa CEP inexistente e CEP geral de cidade.
-13. Nenhum erro de JavaScript.
+13. Pix pelo Mercado Pago (simulado): e-mail obrigatório, QR Code com o valor do servidor, sem cobrança duplicada ao recarregar, e confirmação automática quando o pagamento é aprovado.
+14. Pix sem preço definido: avisa e manda combinar pelo WhatsApp.
+15. Nenhum erro de JavaScript.
 
-Resultado em 25/10/2026: 13 de 13 passaram.
+Resultado em 25/10/2026: 8 de 8 e 15 de 15 passaram.
 
 A especificação recebida terminou no "Cenário 7 — Arquivo inválido". Se havia mais cenários ou seções depois disso, eles ainda não foram implementados.

@@ -3,7 +3,7 @@ import { brl, esc, avisar, DISPONIBILIDADE } from "./util.js";
 import { carregarDados, produtosPublicados, acharProduto, acharModelo, artesPublicadas, podeComprar } from "./dados.js";
 import * as carrinho from "./carrinho.js";
 import { Personalizador, carregarImagem } from "./personalizador.js";
-import { montarPedido, STATUS } from "./pedidos.js";
+import { montarPedido, STATUS, podeMudarStatus } from "./pedidos.js";
 import { lerImagem, apagarImagem } from "./imagens.js";
 import { buscarCep, mascaraCep } from "./cep.js";
 
@@ -321,7 +321,10 @@ async function paginaPersonalizar(produtoId, modeloId) {
   });
 }
 
+const modoMercadoPago = () => dados.loja.pagamento?.modo === "mercadopago";
+
 function textoPagamentoCurto() {
+  if (modoMercadoPago()) return "Pix pelo Mercado Pago: depois de confirmar o pedido, o site mostra o QR Code com o valor, e o pedido é confirmado automaticamente quando o pagamento é aprovado.";
   const modo = dados.loja.pagamento?.modo;
   if (modo === "manual" && dados.loja.pagamento.pixManual?.chave) return "Pix manual: a loja confere o recebimento antes de confirmar o pedido.";
   if (modo === "whatsapp") return "Pix combinado pelo WhatsApp: depois do pedido, a loja envia a chave Pix e o valor na conversa e confere o recebimento.";
@@ -329,6 +332,7 @@ function textoPagamentoCurto() {
 }
 
 function avisoPagamento() {
+  if (modoMercadoPago()) return `<p class="aviso aviso-info"><strong>Pix pelo Mercado Pago</strong>Ao confirmar, aparece o QR Code Pix com o valor do pedido. O pedido é confirmado sozinho quando o Mercado Pago aprovar o pagamento.</p>`;
   const modo = dados.loja.pagamento?.modo;
   if (modo === "manual" && dados.loja.pagamento.pixManual?.chave) return "";
   if (modo === "whatsapp") return `<p class="aviso aviso-info"><strong>Pix combinado pelo WhatsApp</strong>Este site não cobra nada. Depois que você enviar o pedido, a loja manda a chave Pix e o valor na conversa.</p>`;
@@ -441,10 +445,15 @@ const CAMPOS = [
   { id: "observacoes", rotulo: "Observações", tipo: "textarea", auto: "", col: "c6", obrig: false },
 ];
 
-export function validarCheckout(v) {
+/** No Mercado Pago o e-mail é obrigatório (ele envia o comprovante para o cliente). */
+function camposCheckout() {
+  return CAMPOS.map(c => (c.id === "email" && modoMercadoPago() ? { ...c, obrig: true, rotulo: "E-mail (para o comprovante do Pix)" } : c));
+}
+
+export function validarCheckout(v, campos = CAMPOS) {
   const erros = {};
   const dig = s => String(s || "").replace(/\D/g, "");
-  for (const c of CAMPOS) if (c.obrig && !String(v[c.id] || "").trim()) erros[c.id] = `Preencha ${c.rotulo.toLowerCase().replace(" (whatsapp)", "")}.`;
+  for (const c of campos) if (c.obrig && !String(v[c.id] || "").trim()) erros[c.id] = `Preencha ${c.rotulo.toLowerCase().replace(/ \(.*\)$/, "")}.`;
   if (!erros.nome && String(v.nome).trim().length < 3) erros.nome = "Informe o nome completo.";
   if (!erros.telefone && ![10, 11].includes(dig(v.telefone).length)) erros.telefone = "Informe o telefone com DDD, por exemplo (41) 99999-9999.";
   if (v.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) erros.email = "Este e-mail não parece válido.";
@@ -467,7 +476,7 @@ function paginaCheckout() {
     <div class="wrap layout-carrinho">
       <form class="form" novalidate data-form>
         <div class="form-grade">
-          ${CAMPOS.map(c => campoHTML(c, v[c.id])).join("")}
+          ${camposCheckout().map(c => campoHTML(c, v[c.id])).join("")}
         </div>
         <p class="msg-campo" data-resumo-erros role="alert"></p>
         <button class="btn btn-primario" type="submit">Revisar pedido</button>
@@ -483,8 +492,8 @@ function paginaCheckout() {
     e.preventDefault();
     const valores = Object.fromEntries(new FormData(form));
     gravarForm(valores);
-    const erros = validarCheckout(valores);
-    CAMPOS.forEach(c => {
+    const erros = validarCheckout(valores, camposCheckout());
+    camposCheckout().forEach(c => {
       const el = form.elements[c.id];
       const msg = form.querySelector(`#erro-${c.id}`);
       if (erros[c.id]) { el.setAttribute("aria-invalid", "true"); msg.textContent = erros[c.id]; }
@@ -562,7 +571,7 @@ function paginaRevisao() {
   const lista = itensComPrecoAtual();
   const v = lerForm();
   if (!lista.length) { location.hash = "#/carrinho"; return; }
-  if (Object.keys(validarCheckout(v)).length) { location.hash = "#/checkout"; return; }
+  if (Object.keys(validarCheckout(v, camposCheckout())).length) { location.hash = "#/checkout"; return; }
   const tot = carrinho.calcularTotais(lista, dados.loja.entrega);
   main.innerHTML = `
     <div class="wrap cabecalho-pagina">
@@ -648,7 +657,11 @@ function textoPedido(p) {
   L.push(`Subtotal: ${brl(p.valores.subtotal, "a definir")}`);
   L.push(`Entrega: ${p.valores.frete != null ? brl(p.valores.frete) : p.valores.entregaMensagem}`);
   L.push(`*Total: ${brl(p.valores.total, "a definir")}*`);
-  L.push(`Pagamento: Pix (${{ manual: "manual", whatsapp: "combinar a chave por aqui" }[p.pagamento.modo] || "a combinar"})`);
+  if (p.pagamento.mercadoPago?.id) {
+    L.push(`Pagamento: Pix Mercado Pago nº ${p.pagamento.mercadoPago.id} · ${p.pagamento.confirmado ? "APROVADO" : "aguardando"}`);
+  } else {
+    L.push(`Pagamento: Pix (${{ manual: "manual", whatsapp: "combinar a chave por aqui", mercadopago: "Mercado Pago" }[p.pagamento.modo] || "a combinar"})`);
+  }
   L.push("");
   L.push(`Cliente: ${p.cliente.nome}`);
   L.push(`Telefone: ${p.cliente.telefone}${p.cliente.email ? " · " + p.cliente.email : ""}`);
@@ -672,16 +685,21 @@ function paginaPedido() {
   const loja = dados.loja;
   const whats = String(loja.pedidos?.whatsapp || "").replace(/\D/g, "");
   const pixManual = loja.pagamento?.modo === "manual" && loja.pagamento.pixManual?.chave;
+  const mp = p.pagamento.modo === "mercadopago";
   const temImagens = p.itens.some(i => i.referenciaImagem);
   main.innerHTML = `
     <div class="wrap cabecalho-pagina">
       <h1>Pedido ${esc(p.codigo)}</h1>
-      <p>Status: <span class="status-pedido">${esc(STATUS[p.status] || p.status)}</span></p>
+      <p>Status: <span class="status-pedido ${p.status === "pagamento_confirmado" ? "pago" : ""}">${esc(STATUS[p.status] || p.status)}</span></p>
     </div>
     <div class="wrap texto-longo" style="max-width:none">
       <div class="grade-2">
+        ${mp ? `<section>
+          <h2>1. Pague com Pix</h2>
+          <div data-mp aria-live="polite"></div>
+        </section>` : ""}
         <section>
-          <h2>Envie o pedido para a loja</h2>
+          <h2>${mp ? "2. Envie o pedido para a loja" : "Envie o pedido para a loja"}</h2>
           ${whats ? `
             <p>Para a loja receber o seu pedido, envie a mensagem pelo WhatsApp${temImagens ? " e anexe as imagens personalizadas" : ""}.</p>
             <p><a class="btn btn-primario" target="_blank" rel="noopener" href="https://wa.me/${whats}?text=${encodeURIComponent(textoPedido(p))}">Enviar pedido pelo WhatsApp</a></p>`
@@ -691,7 +709,7 @@ function paginaPedido() {
             ${temImagens ? `<button type="button" class="btn btn-contorno" data-baixar-imagens>Baixar imagens</button>` : ""}
           </div>
         </section>
-        <section>
+        ${mp ? "" : `<section>
           <h2>Pagamento</h2>
           ${pixManual ? `
             <p class="aviso aviso-info"><strong>Pix manual</strong>Chave: <span style="font-family:monospace">${esc(loja.pagamento.pixManual.chave)}</span>${loja.pagamento.pixManual.titular ? `<br>Titular: ${esc(loja.pagamento.pixManual.titular)}` : ""}<br>
@@ -700,7 +718,7 @@ function paginaPedido() {
           : loja.pagamento?.modo === "whatsapp"
             ? `<p class="aviso aviso-info"><strong>Pix combinado pelo WhatsApp</strong>Depois de enviar o pedido, a loja manda a chave Pix e o valor na conversa. O pedido só sai de "Aguardando pagamento" quando a loja conferir o recebimento.</p>`
             : `<p class="aviso aviso-demo"><strong>Pagamento ainda não configurado</strong>Este é um modo de demonstração. Nenhum Pix foi gerado e nenhum valor foi cobrado. A loja vai combinar o pagamento com você.</p>`}
-        </section>
+        </section>`}
       </div>
       <h2>Resumo</h2>
       <div class="rolagem-x">
@@ -714,6 +732,7 @@ function paginaPedido() {
       <a class="btn btn-escuro" href="#/catalogo">Voltar ao catálogo</a>
     </div>`;
 
+  if (mp) iniciarPagamentoMercadoPago(p);
   main.querySelector("[data-baixar-resumo]").addEventListener("click", () => {
     baixar(new Blob([textoPedido(p).replace(/\*/g, "")], { type: "text/plain;charset=utf-8" }), `pedido-${p.codigo}.txt`);
   });
@@ -726,6 +745,98 @@ function paginaPedido() {
     }
     avisar(n ? `${n} ${n === 1 ? "imagem baixada" : "imagens baixadas"}.` : "As imagens não estão mais disponíveis neste navegador.");
   });
+}
+
+// ---------------------------------------------------------------- Pix pelo Mercado Pago
+let consultaPix = null; // timer da consulta de status
+
+function pararConsultaPix() { clearTimeout(consultaPix); consultaPix = null; }
+
+async function iniciarPagamentoMercadoPago(p, novaTentativa = false) {
+  const caixa = main.querySelector("[data-mp]");
+  if (!caixa) return;
+  pararConsultaPix();
+  if (p.pagamento.confirmado) return mostrarPagamentoAprovado(p);
+
+  let mp = p.pagamento.mercadoPago;
+  if (!mp || novaTentativa) {
+    caixa.innerHTML = `<p>Gerando o QR Code Pix…</p>`;
+    const tentativa = novaTentativa ? (mp?.tentativa ?? 0) + 1 : 0;
+    try {
+      const resp = await fetch("api/pix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          codigo: p.codigo,
+          tentativa,
+          cliente: { nome: p.cliente.nome, email: p.cliente.email },
+          itens: p.itens.map(i => ({ produtoId: i.produtoId, modeloId: i.modeloId, quantidade: i.quantidade })),
+        }),
+      });
+      const r = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const instrucao = r.codigoErro === "preco_indefinido" || r.codigoErro === "nao_configurado"
+          ? "Envie o pedido pelo WhatsApp e a loja combina o pagamento com você."
+          : "";
+        caixa.innerHTML = `<p class="aviso aviso-alerta"><strong>Não foi possível gerar o Pix.</strong>${esc(r.erro || "Tente de novo em instantes.")} ${instrucao}</p>
+          ${instrucao ? "" : `<p><button type="button" class="btn btn-escuro" data-tentar>Tentar de novo</button></p>`}`;
+        caixa.querySelector("[data-tentar]")?.addEventListener("click", () => iniciarPagamentoMercadoPago(lerUltimoPedido() || p));
+        return;
+      }
+      mp = { ...r, tentativa };
+      p = { ...p, pagamento: { ...p.pagamento, mercadoPago: mp } };
+      gravarUltimoPedido(p);
+    } catch {
+      caixa.innerHTML = `<p class="aviso aviso-alerta"><strong>Sem conexão.</strong>Verifique a internet e tente de novo.</p><p><button type="button" class="btn btn-escuro" data-tentar>Tentar de novo</button></p>`;
+      caixa.querySelector("[data-tentar]").addEventListener("click", () => iniciarPagamentoMercadoPago(lerUltimoPedido() || p));
+      return;
+    }
+  }
+
+  caixa.innerHTML = `
+    <p>Valor: <strong>${brl(mp.valor)}</strong></p>
+    ${mp.qrCodeBase64 ? `<img class="qr-pix" src="data:image/png;base64,${esc(mp.qrCodeBase64)}" alt="QR Code Pix de ${esc(brl(mp.valor))}" width="260" height="260">` : ""}
+    ${mp.copiaECola ? `
+      <label class="rotulo" for="pix-copia">Pix copia e cola</label>
+      <textarea id="pix-copia" class="pix-copia" readonly rows="3">${esc(mp.copiaECola)}</textarea>
+      <p><button type="button" class="btn btn-escuro" data-copiar-pix>Copiar código Pix</button></p>` : ""}
+    <p class="aviso aviso-info" data-mp-status><strong>Aguardando pagamento…</strong>Pague no app do seu banco. Esta página confirma sozinha quando o Mercado Pago aprovar.</p>`;
+  caixa.querySelector("[data-copiar-pix]")?.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(mp.copiaECola); avisar("Código Pix copiado. Cole no app do seu banco."); }
+    catch { caixa.querySelector("#pix-copia").select(); avisar("Selecione e copie o código acima."); }
+  });
+  consultarStatusPix(p, mp, 0);
+}
+
+async function consultarStatusPix(p, mp, rodada) {
+  const caixa = main.querySelector("[data-mp]");
+  if (!caixa || lerUltimoPedido()?.codigo !== p.codigo) return; // saiu da página
+  try {
+    const resp = await fetch(`api/pix/${encodeURIComponent(mp.id)}?ref=${encodeURIComponent(p.codigo)}`, { cache: "no-store" });
+    const r = await resp.json().catch(() => ({}));
+    if (resp.ok && r.status === "approved") {
+      const atual = lerUltimoPedido() || p;
+      // A aprovação veio do Mercado Pago, consultado pelo servidor da loja.
+      const status = podeMudarStatus(atual.status, "pagamento_confirmado", "provedor") ? "pagamento_confirmado" : atual.status;
+      const pago = { ...atual, status, pagamento: { ...atual.pagamento, confirmado: true, aprovadoEm: r.aprovadoEm, mercadoPago: { ...mp, status: r.status } } };
+      gravarUltimoPedido(pago);
+      paginaPedido();
+      return;
+    }
+    if (resp.ok && ["rejected", "cancelled", "refunded", "charged_back"].includes(r.status)) {
+      caixa.querySelector("[data-mp-status]").outerHTML = `<p class="aviso aviso-alerta"><strong>Este Pix expirou ou foi cancelado.</strong>Gere um novo QR Code para pagar.</p><p><button type="button" class="btn btn-primario" data-novo-pix>Gerar novo QR Code</button></p>`;
+      caixa.querySelector("[data-novo-pix]").addEventListener("click", () => iniciarPagamentoMercadoPago(lerUltimoPedido() || p, true));
+      return;
+    }
+  } catch { /* sem conexão: tenta de novo na próxima rodada */ }
+  // A cada 5 s nos primeiros 10 min, depois a cada 20 s. Para depois de 1 h.
+  if (rodada > 300) return;
+  consultaPix = setTimeout(() => consultarStatusPix(p, mp, rodada + 1), rodada < 120 ? 5000 : 20000);
+}
+
+function mostrarPagamentoAprovado(p) {
+  const caixa = main.querySelector("[data-mp]");
+  caixa.innerHTML = `<p class="aviso aviso-sucesso"><strong>Pagamento aprovado pelo Mercado Pago ✓</strong>Pix nº ${esc(p.pagamento.mercadoPago?.id || "")} · ${esc(brl(p.pagamento.mercadoPago?.valor))}. Agora envie o pedido para a loja.</p>`;
 }
 
 function baixar(blob, nome) {
@@ -746,6 +857,7 @@ function paginaPrivacidade() {
       <ul>
         <li>As imagens são processadas no seu próprio navegador. Elas <strong>não são enviadas a nenhum servidor</strong> por este site.</li>
         <li>O carrinho, as imagens personalizadas e o resumo do último pedido ficam guardados só neste aparelho, no armazenamento do navegador. Você pode apagá-los limpando os dados do site no navegador.</li>
+        <li>No pagamento por Pix, seu nome, e-mail, o código e o valor do pedido são enviados ao Mercado Pago para gerar a cobrança. O Mercado Pago envia o comprovante para o seu e-mail.</li>
         <li>Quando você digita o CEP no checkout, só o número do CEP é consultado no serviço público ViaCEP para preencher o endereço.</li>
         <li>Os dados só chegam à loja quando você envia o pedido pelo canal indicado (por exemplo, WhatsApp). A partir daí, valem também as regras desse serviço.</li>
       </ul>
@@ -769,6 +881,7 @@ async function rotear() {
   const partes = rota.split("/").filter(Boolean);
   personalizadorAtivo?.destruir();
   personalizadorAtivo = null;
+  pararConsultaPix();
   marcarMenu(rota);
   document.getElementById("menu").classList.remove("aberto");
   document.querySelector(".menu-btn").setAttribute("aria-expanded", "false");

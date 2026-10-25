@@ -218,7 +218,11 @@ main { flex: 1; }
 .tabela-resumo td.num, .tabela-resumo th.num { text-align: right; white-space: nowrap; }
 .tabela-resumo img { width: 64px; height: 48px; object-fit: cover; border-radius: 4px; }
 .rolagem-x { overflow-x: auto; }
+.qr-pix { width: min(260px, 100%); height: auto; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 8px; background: var(--color-white); margin: 8px 0 12px; }
+.pix-copia { width: 100%; font-family: ui-monospace, monospace; font-size: .8rem; padding: 10px; border: 1px solid #9CA3AF; border-radius: var(--radius-sm); resize: none; word-break: break-all; }
+.aviso-sucesso { background: #ECFDF3; border-color: #75E0A7; color: #054F31; }
 .status-pedido { display: inline-block; padding: 4px 12px; border-radius: 99px; background: var(--color-warn-bg); color: var(--color-warn); font-weight: 700; font-size: .9rem; border: 1px solid #F5D58A; }
+.status-pedido.pago { background: #ECFDF3; color: #054F31; border-color: #75E0A7; }
 
 /* Notificação */
 .toast { position: fixed; left: 16px; right: 16px; bottom: 20px; margin: 0 auto; width: fit-content; background: var(--color-black); color: var(--color-white); padding: 12px 18px; border-radius: var(--radius); z-index: 50; max-width: calc(100% - 32px); box-shadow: 0 4px 16px rgba(0,0,0,.25); border-left: 4px solid var(--color-primary); }

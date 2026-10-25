@@ -9,9 +9,51 @@ const { chromium } = require("playwright");
 const RAIZ = path.join(__dirname, "..", "public");
 const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".jpg": "image/jpeg", ".png": "image/png", ".webmanifest": "application/manifest+json" };
 
+// Mercado Pago simulado: guarda os Pix criados e deixa o teste aprovar um deles.
+const mp = { pagamentos: new Map(), proximoId: 9000 };
+let precosTeste = null; // quando definido, o servidor e o navegador usam estes preços
+const fetchReal = globalThis.fetch;
+globalThis.fetch = async (url, opcoes = {}) => {
+  const u = String(url);
+  if (!u.startsWith("https://api.mercadopago.com/")) return fetchReal(url, opcoes);
+  if (opcoes.method === "POST") {
+    const corpo = JSON.parse(opcoes.body);
+    const id = mp.proximoId++;
+    mp.pagamentos.set(String(id), { id, status: "pending", transaction_amount: corpo.transaction_amount, external_reference: corpo.external_reference });
+    return Response.json({ ...mp.pagamentos.get(String(id)), point_of_interaction: { transaction_data: { qr_code: `00020126PIX-${id}`, qr_code_base64: PNG_1PX } } }, { status: 201 });
+  }
+  const pag = mp.pagamentos.get(u.split("/").pop());
+  return pag ? Response.json(pag) : new Response("{}", { status: 404 });
+};
+const PNG_1PX = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+function aplicarPrecos(catalogo) {
+  if (precosTeste) for (const p of catalogo.produtos) for (const m of p.modelos) if (m.id in precosTeste) m.preco = precosTeste[m.id];
+  return catalogo;
+}
+
+async function rotaApi(req, res) {
+  const worker = (await import("../src/worker.js")).default;
+  const corpo = await new Promise(ok => { let d = ""; req.on("data", c => (d += c)); req.on("end", () => ok(d)); });
+  const env = {
+    MP_ACCESS_TOKEN: "TEST-token",
+    ASSETS: {
+      async fetch(r) {
+        const caminho = new URL(r.url).pathname;
+        const dados = JSON.parse(fs.readFileSync(path.join(RAIZ, caminho), "utf8"));
+        return Response.json(caminho.endsWith("catalogo.json") ? aplicarPrecos(dados) : dados);
+      },
+    },
+  };
+  const resp = await worker.fetch(new Request("http://loja.test" + req.url, { method: req.method, body: req.method === "POST" ? corpo : undefined }), env);
+  res.writeHead(resp.status, { "Content-Type": "application/json" });
+  res.end(await resp.text());
+}
+
 function servidor() {
   return new Promise(ok => {
     const s = http.createServer((req, res) => {
+      if (req.url.startsWith("/api/")) return rotaApi(req, res);
       const url = decodeURIComponent(req.url.split("?")[0]);
       const arq = path.join(RAIZ, url === "/" ? "index.html" : url);
       if (!arq.startsWith(RAIZ) || !fs.existsSync(arq) || fs.statSync(arq).isDirectory()) { res.writeHead(404); return res.end(); }
@@ -217,6 +259,7 @@ async function cenario(nome, fn) {
     assert.equal(await page.getAttribute("#nome", "aria-invalid"), "true");
     await page.fill("#nome", "Cliente de Teste");
     await page.fill("#telefone", "41999998888");
+    await page.fill("#email", "cliente@example.com");
     await page.fill("#cep", "123");
     await page.selectOption("#estado", "PR");
     await page.fill("#cidade", "Curitiba");
@@ -231,7 +274,7 @@ async function cenario(nome, fn) {
     assert.deepEqual(errosForm, []);
     await page.waitForURL(/checkout\/revisao/);
     assert.match(await page.textContent("main"), /Entrega a combinar/);
-    assert.match(await page.textContent("main"), /Pix combinado pelo WhatsApp|Pagamento ainda não configurado/);
+    assert.match(await page.textContent("main"), /Pix pelo Mercado Pago|Pix combinado pelo WhatsApp|Pagamento ainda não configurado/);
     assert.doesNotMatch(await page.textContent("main"), /Chave:/);
     // voltar e corrigir mantém os dados
     await page.click("text=Corrigir dados");
@@ -279,6 +322,79 @@ async function cenario(nome, fn) {
     await page.fill("#cep", "83700000");
     await page.waitForFunction(() => /cidade toda/.test(document.querySelector("#status-cep").textContent));
     assert.equal(await page.inputValue("#cidade"), "Araucária");
+  });
+
+  await cenario("Pix pelo Mercado Pago: QR Code e confirmação automática", async () => {
+    precosTeste = { p: 30, m: 40, g: 120, classico: 80, divertido: 85 };
+    await limpar();
+    try {
+    await page.route("**/data/catalogo.json", async r => {
+      const resp = await r.fetch(); r.fulfill({ response: resp, json: aplicarPrecos(await resp.json()) });
+    });
+    const modo = await page.evaluate(() => fetch("data/loja.json").then(r => r.json()).then(l => l.pagamento.modo));
+    if (modo !== "mercadopago") await page.route("**/data/loja.json", async r => {
+      const resp = await r.fetch(); const json = await resp.json(); json.pagamento.modo = "mercadopago"; r.fulfill({ response: resp, json });
+    });
+    await page.goto(base + "#/"); await page.reload();
+    await irPara("#/personalizar/mousepad/m");
+    await page.click("label.opcao:has(input[value=arte])");
+    await page.click("label.opcao-arte:has(input[value=neon-gamer])");
+    await page.waitForSelector("[data-ajustes]:not([hidden])");
+    await page.click("[data-qtd='1']");
+    await page.click("[data-adicionar]");
+    await page.waitForURL(/#\/carrinho/);
+    await page.click("text=Finalizar compra");
+    await page.fill("#nome", "Cliente Pix");
+    await page.fill("#telefone", "41999998888");
+    await page.fill("#cep", "80010000");
+    await page.waitForFunction(() => document.querySelector("#rua").value);
+    await page.fill("#numero", "5");
+    await page.click("button:has-text('Revisar pedido')");
+    assert.match(await page.textContent("#erro-email"), /Preencha e-mail/);
+    await page.fill("#email", "pix@example.com");
+    await page.click("button:has-text('Revisar pedido')");
+    await page.waitForURL(/checkout\/revisao/);
+    await page.waitForSelector("[data-confirmar]");
+    { const t = await page.textContent("main"); assert.match(t, /Pix pelo Mercado Pago/, t.replace(/\s+/g, " ").slice(0, 100) + JSON.stringify(await page.$$eval(".campo .erro", e => e.map(x => x.id + ":" + x.textContent))) + page.url()); }
+    await page.click("[data-confirmar]");
+    await page.waitForURL(/#\/pedido/);
+    await page.waitForSelector("img.qr-pix");
+    assert.match(await page.textContent("[data-mp]"), /Valor: R\$\s80,00/);
+    const codigo = await page.inputValue("#pix-copia");
+    assert.match(codigo, /^00020126PIX-\d+$/);
+    assert.match(await page.textContent(".status-pedido"), /Aguardando pagamento/);
+    // recarregar não gera outra cobrança
+    const antes = mp.pagamentos.size;
+    await page.reload(); await page.waitForSelector("img.qr-pix");
+    assert.equal(mp.pagamentos.size, antes);
+    // o Mercado Pago aprova; a página percebe sozinha
+    const id = codigo.split("-").pop();
+    mp.pagamentos.get(id).status = "approved";
+    await page.waitForFunction(() => /Pagamento confirmado/.test(document.querySelector(".status-pedido")?.textContent || ""), null, { timeout: 15000 });
+    assert.match(await page.textContent("[data-mp]"), /aprovado pelo Mercado Pago/);
+    const pedido = await page.evaluate(() => JSON.parse(localStorage.getItem("empire-ultimo-pedido")));
+    assert.equal(pedido.status, "pagamento_confirmado");
+    assert.equal(pedido.pagamento.mercadoPago.id, id);
+    const link = await page.getAttribute("a:has-text('Enviar pedido pelo WhatsApp')", "href");
+    assert.match(decodeURIComponent(link), /Mercado Pago nº \d+ · APROVADO/);
+    } finally {
+      await page.unroute("**/data/catalogo.json"); await page.unroute("**/data/loja.json");
+      precosTeste = null;
+    }
+  });
+
+  await cenario("Pix pelo Mercado Pago sem preço definido manda combinar pelo WhatsApp", async () => {
+    const pedido = await page.evaluate(() => {
+      const p = JSON.parse(localStorage.getItem("empire-ultimo-pedido"));
+      p.codigo = "EMP-SEMPR2"; p.status = "aguardando_pagamento"; p.pagamento = { metodo: "pix", modo: "mercadopago", confirmado: false };
+      localStorage.setItem("empire-ultimo-pedido", JSON.stringify(p)); return p;
+    });
+    await page.goto(base + "#/"); await page.reload();
+    await irPara("#/pedido");
+    await page.waitForFunction(() => /Não foi possível gerar o Pix/.test(document.querySelector("[data-mp]")?.textContent || ""), null, { timeout: 8000 })
+      .catch(async e => { throw new Error(e.message + " | " + (await page.textContent("main")).replace(/\s+/g, " ").slice(0, 400)); });
+    assert.match(await page.textContent("[data-mp]"), /preço/);
+    assert.ok(pedido);
   });
 
   await cenario("Layout sem rolagem horizontal no celular", async () => {

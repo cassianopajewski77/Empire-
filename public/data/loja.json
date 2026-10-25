@@ -16,8 +16,8 @@
     "prazo": null
   },
   "pagamento": {
-    "_leia": "Modos: 'whatsapp' (Pix combinado na conversa do pedido; o site não mostra chave), 'demonstracao' (nenhum pagamento real), 'manual' (Pix manual conferido por um adulto responsável; preencha pixManual) ou 'provedor' (exige backend e webhook do provedor; ainda não implementado).",
-    "modo": "whatsapp",
+    "_leia": "Modos: 'mercadopago' (QR Code Pix gerado pelo Mercado Pago e confirmação automática; exige o segredo MP_ACCESS_TOKEN na Cloudflare e os preços no catálogo), 'whatsapp' (Pix combinado na conversa do pedido; o site não mostra chave), 'demonstracao' (nenhum pagamento real), 'manual' (Pix manual conferido por um adulto responsável; preencha pixManual) ou 'provedor' (exige backend e webhook do provedor; ainda não implementado).",
+    "modo": "mercadopago",
     "pixManual": {
       "chave": null,
       "titular": null
