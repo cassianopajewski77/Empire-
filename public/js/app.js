@@ -6,6 +6,7 @@ import { Personalizador, carregarImagem } from "./personalizador.js";
 import { PersonalizadorComedouro } from "./comedouro.js";
 import { montarPedido, codigoPedido, STATUS, podeMudarStatus } from "./pedidos.js";
 import { lerImagem, apagarImagem } from "./imagens.js";
+import { enviarPrevias, linkPrevia } from "./previa-pedido.js";
 import { buscarCep, mascaraCep } from "./cep.js";
 
 const main = document.getElementById("conteudo");
@@ -886,7 +887,11 @@ function paginaRevisao() {
       loja: dados.loja,
     });
     e.target.textContent = "Registrando o pedido…";
-    const registrado = await registrarNoServidor(pedido);
+    let registrado = await registrarNoServidor(pedido);
+    if (registrado.chave && registrado.itens.some(i => i.referenciaImagem)) {
+      e.target.textContent = "Enviando a prévia para a loja…";
+      registrado = await enviarPrevias(registrado, descricaoPersonalizacao);
+    }
     if (!gravarUltimoPedido(registrado)) {
       e.target.disabled = false;
       e.target.textContent = "Confirmar pedido";
@@ -965,6 +970,7 @@ function textoPedido(p) {
     L.push(`${n + 1}. ${i.produtoNome}: ${i.modeloNome} (${i.dimensoes?.rotulo || ""})`);
     L.push(`   ${descricaoPersonalizacao(i.personalizacao)}`);
     L.push(`   Quantidade: ${i.quantidade} · Unitário: ${brl(i.precoUnitario, "a definir")}`);
+    if (i.previaEnviada && p.chave) L.push(`   Prévia: ${linkPrevia(p, n)}`);
   });
   L.push("");
   L.push(`Subtotal: ${brl(p.valores.subtotal, "a definir")}`);
@@ -1000,6 +1006,8 @@ function paginaPedido() {
   const pixManual = loja.pagamento?.modo === "manual" && loja.pagamento.pixManual?.chave;
   const mp = p.pagamento.modo === "mercadopago";
   const temImagens = p.itens.some(i => i.referenciaImagem);
+  const comPrevia = p.chave ? p.itens.map((i, n) => [i, n]).filter(([i]) => i.previaEnviada) : [];
+  const previaFaltando = Boolean(p.chave) && p.itens.some(i => i.referenciaImagem && !i.previaEnviada);
   main.innerHTML = `
     <div class="wrap cabecalho-pagina">
       <h1>Pedido ${esc(p.codigo)}</h1>
@@ -1016,7 +1024,7 @@ function paginaPedido() {
         <section>
           <h2>${mp ? "2. Envie o pedido para a loja" : "Envie o pedido para a loja"}</h2>
           ${whats ? `
-            <p>Para a loja receber o seu pedido, envie a mensagem pelo WhatsApp${temImagens ? " e anexe as imagens personalizadas" : ""}.</p>
+            <p>Para a loja receber o seu pedido, envie a mensagem pelo WhatsApp${temImagens ? (comPrevia.length ? ". A prévia já está anexada ao pedido; se puder, mande também a foto original na conversa para a impressão sair com a melhor qualidade" : " e anexe as imagens personalizadas") : ""}.</p>
             <p><a class="btn btn-primario" target="_blank" rel="noopener" href="https://wa.me/${whats}?text=${encodeURIComponent(textoPedido(p))}">Enviar pedido pelo WhatsApp</a></p>`
           : `<p class="aviso aviso-alerta"><strong>Este pedido ainda não foi enviado para a loja.</strong>O envio de pedidos ainda não foi configurado. Guarde o resumo e as imagens abaixo e entregue para a loja pelo contato que você recebeu.</p>`}
           <div class="ajuste-linha" style="margin-top:12px">
@@ -1035,6 +1043,12 @@ function paginaPedido() {
             : `<p class="aviso aviso-demo"><strong>Pagamento ainda não configurado</strong>Este é um modo de demonstração. Nenhum Pix foi gerado e nenhum valor foi cobrado. A loja vai combinar o pagamento com você.</p>`}
         </section>`}
       </div>
+      ${comPrevia.length || previaFaltando ? `
+      <h2>Prévia enviada para a loja</h2>
+      ${comPrevia.length ? `<div class="previas-pedido">${comPrevia.map(([i, n]) => `
+        <figure data-previa-item="${n}"><a href="${esc(linkPrevia(p, n))}" target="_blank" rel="noopener"><img src="${esc(linkPrevia(p, n))}" alt="Prévia do item ${n + 1}: ${esc(i.produtoNome)}, ${esc(i.modeloNome)}" loading="lazy"></a>
+          <figcaption>Item ${n + 1}: ${esc(i.produtoNome)} · ${esc(i.modeloNome)} <span class="ok-previa">✓ anexada ao pedido</span></figcaption></figure>`).join("")}</div>` : ""}
+      ${previaFaltando ? `<p class="aviso aviso-alerta" data-previa-pendente><strong>A prévia ainda não chegou à loja.</strong>Verifique a conexão e tente de novo. <button type="button" class="btn btn-escuro" data-reenviar-previa style="margin-top:8px">Enviar a prévia de novo</button></p>` : ""}` : ""}
       <h2>Resumo</h2>
       <div class="rolagem-x">
         <table class="tabela-resumo">
@@ -1043,15 +1057,24 @@ function paginaPedido() {
         </table>
       </div>
       <p style="margin-top:12px"><strong>Total: ${brl(p.valores.total, "a definir")}</strong> · Entrega: ${esc(p.valores.frete != null ? brl(p.valores.frete) : p.valores.entregaMensagem)}</p>
-      <p style="color:var(--color-muted);font-size:.9rem">${p.chave ? `O pedido foi registrado na loja.${p.cliente.aceitaWhatsApp ? " Você recebe a confirmação e o rastreio pelo WhatsApp." : ""} As imagens personalizadas ficam só neste navegador até você enviar pelo WhatsApp.` : "Este resumo fica guardado só neste navegador."}</p>
+      <p style="color:var(--color-muted);font-size:.9rem">${p.chave ? `O pedido foi registrado na loja.${p.cliente.aceitaWhatsApp ? " Você recebe a confirmação e o rastreio pelo WhatsApp." : ""} ${comPrevia.length ? " A prévia de cada produto personalizado ficou anexada ao pedido; a foto original fica só neste navegador até você enviar pelo WhatsApp." : " As imagens personalizadas ficam só neste navegador até você enviar pelo WhatsApp."}` : "Este resumo fica guardado só neste navegador."}</p>
       <a class="btn btn-escuro" href="#/catalogo">Voltar ao catálogo</a>
     </div>`;
 
   if (mp) iniciarPagamentoMercadoPago(p);
+  main.querySelector("[data-reenviar-previa]")?.addEventListener("click", async e => {
+    e.target.disabled = true;
+    e.target.textContent = "Enviando…";
+    const r = await enviarPrevias(lerUltimoPedido() || p, descricaoPersonalizacao);
+    gravarUltimoPedido(r);
+    if (r.previasPendentes) avisar("Não foi possível enviar a prévia. Tente de novo em instantes.");
+    paginaPedido();
+  });
   main.querySelector("[data-registrar]")?.addEventListener("click", async e => {
     e.target.disabled = true;
     const atual = lerUltimoPedido() || p;
-    const r = await registrarNoServidor(atual);
+    let r = await registrarNoServidor(atual);
+    if (r.chave) r = await enviarPrevias(r, descricaoPersonalizacao);
     gravarUltimoPedido(r);
     if (r.registro?.erro) avisar(r.registro.erro);
     paginaPedido();
@@ -1179,7 +1202,7 @@ function paginaPrivacidade() {
       <p>Nome, telefone, e-mail (opcional) e endereço de entrega, além das imagens que você enviar para personalizar os produtos. Pedimos apenas o necessário para produzir e entregar o pedido.</p>
       <h2>Onde ficam os dados</h2>
       <ul>
-        <li>As imagens são processadas no seu próprio navegador. Elas <strong>não são enviadas a nenhum servidor</strong> por este site: você as envia para a loja pelo WhatsApp.</li>
+        <li>As imagens são processadas no seu próprio navegador. Ao confirmar o pedido, o site envia para a loja só uma <strong>prévia</strong> de cada produto personalizado (uma imagem reduzida, com o código do pedido), que fica guardada junto com o pedido para a produção. A foto original não é enviada pelo site: se a loja precisar dela, você manda pelo WhatsApp.</li>
         <li>O carrinho, as imagens personalizadas e o resumo do último pedido ficam guardados neste aparelho, no armazenamento do navegador. Você pode apagá-los limpando os dados do site no navegador.</li>
         <li>Ao confirmar o pedido, os dados do pedido (nome, telefone, e-mail, endereço, produtos e valores) são guardados no sistema da loja, hospedado na Cloudflare. Só a loja tem acesso, pelo painel protegido por senha.</li>
         <li>Se você marcar a opção no checkout, a loja manda a confirmação do pagamento e o rastreio para o seu WhatsApp pela plataforma oficial do WhatsApp (Meta). Sem essa opção, nenhuma mensagem automática é enviada.</li>

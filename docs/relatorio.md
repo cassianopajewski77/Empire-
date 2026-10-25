@@ -30,7 +30,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido); comedouro R$ 69,90. |
 | Pagamento Pix | Modo `mercadopago` (escolha do Cassiano): o servidor da loja (`src/worker.js`) cria a cobrança Pix no Mercado Pago com o valor calculado a partir do catálogo, e o site mostra o QR Code e o copia e cola. A página consulta o status pelo servidor e marca "Pagamento confirmado" só quando o Mercado Pago responde `approved`. Sem o segredo `MP_ACCESS_TOKEN` ou sem preço definido, o site avisa e manda combinar pelo WhatsApp. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
-| Envio do pedido | O pedido é registrado no servidor da loja e aparece no painel. O cliente ainda envia as imagens pelo WhatsApp (41) 99690-7357. |
+| Envio do pedido | O pedido é registrado no servidor da loja e aparece no painel. Ao confirmar, o site gera a prévia de cada item personalizado (até 1200 px, com o código do pedido e a personalização na legenda) e a anexa ao pedido (`POST /api/pedidos/:codigo/previas/:n`, guardada no Durable Object). A prévia aparece na página do pedido, no painel (para baixar) e como link na mensagem de WhatsApp. A foto original em alta resolução continua indo pelo WhatsApp (41) 99690-7357. |
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Artes da galeria | 10 conceitos originais (Cyber Empire, Dragão, Galáxia, Topográfico, Pet Lovers, Minimalista, Retro Wave, Arte Oriental, Mapa Mundi, Mármore) gerados por programa como demonstração, com o selo "Arte provisória". Nenhum é recorte do cartaz de referência. Precisam ser trocados pelas artes finais (ver README). |
@@ -66,7 +66,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 6. Limitações atuais (importante)
 
-1. **As imagens personalizadas não vão para o servidor.** Elas ficam no navegador do cliente, que envia pelo WhatsApp. Guardá-las no servidor exigiria um armazenamento de arquivos (R2).
+1. **Só a prévia vai para o servidor.** A foto original em alta resolução fica no navegador do cliente, que envia pelo WhatsApp. Guardar os arquivos de impressão no servidor exigiria um armazenamento de arquivos (R2).
 2. **Mensagens automáticas dependem da Meta.** Até a conta e os modelos serem aprovados, o envio é pelo botão do painel.
 3. **Não há prazo de retenção definido** para os dados dos pedidos. A loja apaga a pedido do cliente.
 
@@ -81,7 +81,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 8. Testes
 
-`npm test` roda 15 testes do servidor (`tests/worker.test.mjs`) e 20 cenários no Chromium em tela de celular:
+`npm test` roda 16 testes do servidor (`tests/worker.test.mjs`) e 20 cenários no Chromium em tela de celular:
 
 1. Página inicial com a primeira dobra em fundo branco (desk pad do Flamengo e comedouro) e os botões.
 2. Mousepad com arte pronta, sem enviar imagem.
@@ -92,16 +92,16 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 7. Quantidades recalculam subtotal e total.
 8. Arquivo inválido, grande demais ou corrompido é recusado com mensagem.
 9. Remover itens até o carrinho ficar vazio.
-10. Checkout valida os campos, mantém os dados ao voltar e cria o pedido em "Aguardando pagamento", sem confirmar pagamento.
+10. Checkout valida os campos, mantém os dados ao voltar e cria o pedido em "Aguardando pagamento", sem confirmar pagamento; a prévia do item é gerada, anexada ao pedido no servidor, mostrada na página do pedido e incluída como link na mensagem de WhatsApp.
 11. Nenhuma página tem rolagem horizontal no celular (inclui galeria, times e as páginas pet).
 12. CEP preenche o endereço (com o ViaCEP simulado), avisa CEP inexistente e CEP geral de cidade.
 13. Pix pelo Mercado Pago (simulado): e-mail obrigatório, QR Code com o valor do servidor, sem cobrança duplicada ao recarregar, e confirmação automática.
 14. Pix sem preço definido: avisa e manda combinar pelo WhatsApp.
-15. Painel: senha, confirmação manual, rastreio, mensagens no WhatsApp (simuladas) e rastreio na página do cliente.
+15. Painel: senha, prévia anexada (só com a chave do cliente, só JPEG ou PNG) aparecendo no pedido, confirmação manual, rastreio, mensagens no WhatsApp (simuladas) e rastreio na página do cliente.
 16. Galeria de artes: 10 artes com selo provisório, filtro por coleção, busca, escolha da arte, troca de tamanho mantendo a arte e proporção da prévia em cada tamanho, arte certa no carrinho.
 17. Times: 18 clubes com Coritiba, Athletico Paranaense e Paraná Clube, filtro por clube, nenhum escudo, times sem licença fora de venda.
 18. Página Tapetes pet: dois cartões, imagens carregadas e marcadas como ilustrativas, faixa sem "Compra segura", botões levando a `#/comedouros` e `#/tapetes-foto`, menu marcado e migalha de volta.
 19. Comedouro: nome obrigatório, prévia na proporção configurada mudando com nome e tema, quantidade, dois comedouros diferentes separados no carrinho com nome, tema e o total certo (R$ 69,90 cada).
 20. Nenhum erro de JavaScript.
 
-Resultado em 25/10/2026: 15 de 15 e 20 de 20 passaram.
+Resultado em 25/10/2026: 16 de 16 e 20 de 20 passaram.
