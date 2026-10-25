@@ -17,7 +17,8 @@ const gravarSenha = s => { try { s ? sessionStorage.setItem(CHAVE_SENHA, s) : se
 async function api(caminho, { metodo = "GET", corpo } = {}) {
   const resp = await fetch("api/admin" + caminho, {
     method: metodo,
-    headers: { Authorization: `Bearer ${lerSenha()}`, ...(corpo ? { "Content-Type": "application/json" } : {}) },
+    // a senha vai codificada para aceitar acentos e "ç" no cabeçalho HTTP
+    headers: { Authorization: `Bearer ${encodeURIComponent(lerSenha())}`, ...(corpo ? { "Content-Type": "application/json" } : {}) },
     body: corpo ? JSON.stringify(corpo) : undefined,
     cache: "no-store",
   });
