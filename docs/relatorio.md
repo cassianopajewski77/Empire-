@@ -27,7 +27,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 | Item | Situação no site |
 | --- | --- |
-| Preços | Mousepads definidos pelo Cassiano em 25/10/2026: P R$ 19,90, M R$ 24,90, G R$ 109,90. Tapetes pet (Clássico e Divertido) ainda `null`: aparece "Preço a definir" e o Pix não é gerado para pedidos com eles. |
+| Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido). |
 | Pagamento Pix | Modo `mercadopago` (escolha do Cassiano): o servidor da loja (`src/worker.js`) cria a cobrança Pix no Mercado Pago com o valor calculado a partir do catálogo, e o site mostra o QR Code e o copia e cola. A página consulta o status pelo servidor e marca "Pagamento confirmado" só quando o Mercado Pago responde `approved`. Sem o segredo `MP_ACCESS_TOKEN` ou sem preço definido, o site avisa e manda combinar pelo WhatsApp. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
 | Envio do pedido | WhatsApp configurado: (41) 99690-7357. Depois de confirmar, o cliente toca em "Enviar pedido pelo WhatsApp" e anexa as imagens baixadas. Sem número, o site avisaria que o pedido **não foi enviado**. |
@@ -62,11 +62,10 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 7. O que é preciso para vender de verdade
 
-1. Definir os preços dos tapetes pet (`public/data/catalogo.json`).
-2. Cadastrar o token de produção do Mercado Pago como segredo `MP_ACCESS_TOKEN` na Cloudflare. A conta é do Cassiano, adulto responsável.
-3. Para pedidos guardados com segurança: banco de dados (D1) e armazenamento privado das imagens (R2) no mesmo Worker, um painel protegido por senha para a loja, e o webhook assinado do Mercado Pago para confirmar o Pix mesmo com a página fechada.
-4. Cadastrar descrição, preço e imagem de referência dos Modelos Clássico e Divertido.
-5. Revisar a política de privacidade quando os dados passarem a ser guardados em servidor.
+1. Cadastrar o token de produção do Mercado Pago como segredo `MP_ACCESS_TOKEN` na Cloudflare. A conta é do Cassiano, adulto responsável.
+2. Para pedidos guardados com segurança: banco de dados (D1) e armazenamento privado das imagens (R2) no mesmo Worker, um painel protegido por senha para a loja, e o webhook assinado do Mercado Pago para confirmar o Pix mesmo com a página fechada.
+3. Cadastrar descrição e imagem de referência dos Modelos Clássico e Divertido.
+4. Revisar a política de privacidade quando os dados passarem a ser guardados em servidor.
 
 ## 8. Testes
 

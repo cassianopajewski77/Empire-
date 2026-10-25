@@ -62,7 +62,9 @@ test("calcula o total com os preços do catálogo, ignorando preços enviados pe
 });
 
 test("recusa cobrar quando algum preço ainda não foi definido", async () => {
-  const resp = await post(ambiente(catalogoReal), pedido);
+  const semPreco = catalogoComPrecos();
+  semPreco.produtos.find(p => p.id === "tapete-pet").modelos[0].preco = null;
+  const resp = await post(ambiente(semPreco), pedido);
   assert.equal(resp.status, 409);
   assert.equal((await resp.json()).codigoErro, "preco_indefinido");
   assert.equal(chamadas.length, 0);
