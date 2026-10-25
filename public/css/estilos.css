@@ -47,7 +47,8 @@ p { margin: 0 0 1em; }
 /* Cabeçalho */
 .topo { background: var(--color-black); color: var(--color-white); position: sticky; top: 0; z-index: 20; }
 .topo .wrap { display: flex; align-items: center; gap: 12px; min-height: 92px; }
-.topo .logo img { height: 76px; width: auto; }
+.topo .logo { display: inline-flex; align-items: center; flex-shrink: 0; }
+.topo .logo img { display: block; height: 60px; width: auto; max-width: 100%; object-fit: contain; }
 .topo nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
 .topo nav a { text-decoration: none; padding: 10px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: .95rem; }
 .topo nav a:hover { background: #1a1a1a; }
@@ -55,8 +56,12 @@ p { margin: 0 0 1em; }
 .topo .carrinho-link { display: inline-flex; align-items: center; gap: 6px; }
 .topo .badge { background: var(--color-primary); color: var(--color-black); border-radius: 99px; font-size: .75rem; font-weight: 800; min-width: 22px; height: 22px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; }
 .menu-btn { display: none; }
+@media (min-width: 761px) and (max-width: 1100px) {
+  .topo .logo img { height: auto; width: clamp(140px, 19vw, 210px); }
+  .topo nav a { padding: 10px 7px; }
+}
 @media (max-width: 760px) {
-  .topo .logo img { height: 58px; max-width: 52vw; object-fit: contain; }
+  .topo .logo img { height: 44px; max-width: 58vw; }
   .menu-btn { display: inline-flex; margin-left: auto; background: transparent; color: var(--color-white); border: 1px solid #333; border-radius: var(--radius-sm); min-height: 44px; padding: 0 12px; font: inherit; font-weight: 600; align-items: center; }
   .topo nav { display: none; position: absolute; left: 0; right: 0; top: 100%; background: var(--color-black); flex-direction: column; align-items: stretch; padding: 8px var(--gutter) 16px; border-top: 1px solid #222; }
   .topo nav.aberto { display: flex; }
@@ -252,7 +257,7 @@ main { flex: 1; }
 @media (min-width: 760px) { .rodape .wrap { grid-template-columns: 2fr 1fr 1fr; } }
 .rodape a { color: var(--color-primary); }
 .rodape ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-.rodape .marca img { height: 88px; width: auto; margin-bottom: 12px; }
+.rodape .marca img { display: block; height: 64px; width: auto; max-width: 100%; object-fit: contain; margin-bottom: 12px; }
 .rodape .fino { grid-column: 1 / -1; border-top: 1px solid #222; padding-top: 16px; color: #9CA3AF; font-size: .85rem; }
 
 .texto-longo { max-width: 46em; padding-bottom: 48px; }

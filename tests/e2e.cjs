@@ -116,6 +116,12 @@ async function cenario(nome, fn) {
     await irPara("#/");
     assert.match(await page.textContent("h1"), /Sua criatividade\. Seus produtos\. Seu estilo\./);
     assert.equal(await page.locator(".topo img[alt='Mats & Mouse Pads Empire']").count(), 1);
+    // logo nova carregada, sem distorção (proporção do arquivo mantida na tela)
+    await page.waitForFunction(() => { const i = document.querySelector(".topo .logo img"); return i.complete && i.naturalWidth > 0; });
+    const logo = await page.$eval(".topo .logo img", i => ({ src: i.getAttribute("src"), nat: i.naturalWidth / i.naturalHeight, tela: i.getBoundingClientRect().width / i.getBoundingClientRect().height, fit: getComputedStyle(i).objectFit }));
+    assert.equal(logo.src, "assets/logo.png");
+    assert.equal(logo.fit, "contain");
+    assert.ok(Math.abs(logo.nat - logo.tela) < 0.05, `logo distorcida: arquivo ${logo.nat}, tela ${logo.tela}`);
     // primeira dobra: dois produtos com imagens carregadas e botões que levam às páginas reais
     await page.waitForFunction(() => [...document.querySelectorAll(".dobra img")].every(i => i.complete));
     const imgs = await page.$$eval(".dobra img", els => els.map(i => i.naturalWidth > 0));
