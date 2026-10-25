@@ -102,7 +102,7 @@ export function validarPedido(corpo, catalogo, loja) {
       dimensoes: modelo.dimensoes || null,
       quantidade: qtd,
       precoUnitario: preco,
-      fonte: item.fonte === "upload" ? "upload" : item.fonte === "arte" ? "arte" : null,
+      fonte: ["upload", "arte", "texto"].includes(item.fonte) ? item.fonte : null,
       personalizacaoTexto: texto(item.personalizacaoTexto, 120) || null,
     });
   }

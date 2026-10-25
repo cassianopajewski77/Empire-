@@ -127,14 +127,14 @@ async function cenario(nome, fn) {
     const imgs = await page.$$eval(".dobra img", els => els.map(i => i.naturalWidth > 0));
     assert.deepEqual(imgs, [true, true]);
     assert.ok(await page.isVisible(".dobra >> text=Desk Pads Gamer"));
-    assert.ok(await page.isVisible(".dobra >> text=Tapetes Pet Personalizados"));
+    assert.ok(await page.isVisible(".dobra >> text=Comedouros Personalizados"));
     await page.click("a:has-text('Explorar Desk Pads')");
     await page.waitForURL(/#\/mousepads$/);
     await page.waitForSelector("h1:has-text('Mousepad')");
     await irPara("#/");
-    await page.click("a:has-text('Personalizar Tapete Pet')");
-    await page.waitForURL(/#\/tapetes-pet$/);
-    await page.waitForSelector("h1:has-text('Tapete')");
+    await page.click("a:has-text('Explorar Comedouros')");
+    await page.waitForURL(/#\/comedouros$/);
+    await page.waitForSelector("h1:has-text('Comedouros')");
   });
 
   await cenario("1. Mousepad com arte pronta, sem enviar imagem", async () => {
@@ -187,6 +187,9 @@ async function cenario(nome, fn) {
 
   await cenario("4. Tapete pet com fotografia (Modelo Divertido)", async () => {
     await irPara("#/tapetes-pet");
+    await page.click("a:has-text('Explorar Tapetes Personalizados')");
+    await page.waitForURL(/#\/tapetes-foto$/);
+    await page.waitForSelector("h1:has-text('Tapetes com o rosto do seu pet')");
     assert.ok(await page.isVisible("text=Modelo Clássico"));
     await page.click(".cartao:has-text('Modelo Divertido') >> text=Personalizar");
     await page.waitForURL(/tapete-pet\/divertido/);
@@ -202,6 +205,81 @@ async function cenario(nome, fn) {
     assert.equal(novo.modeloNome, "Modelo Divertido");
     assert.equal(novo.personalizacao.arquivo.nome, "mia.png");
     assert.equal(novo.dimensoes.rotulo, "40 × 60 cm");
+  });
+
+  await cenario("Tapetes pet: duas categorias, botões e informações reais", async () => {
+    await irPara("#/tapetes-pet");
+    assert.equal(await page.textContent("h1"), "Tapetes pet personalizados");
+    assert.match(await page.textContent("main"), /Escolha o modelo ideal e personalize com o nome ou a foto do seu pet\./);
+    assert.equal(await page.locator(".cartao-pet").count(), 2);
+    assert.ok(await page.isVisible(".cartao-pet >> text=Comedouros Personalizados"));
+    assert.ok(await page.isVisible(".cartao-pet >> text=Tapetes com o Rosto do Seu Pet"));
+    await page.waitForFunction(() => [...document.querySelectorAll(".cartao-pet img")].every(i => i.complete && i.naturalWidth > 0));
+    assert.equal(await page.locator(".cartao-pet .selo-provisoria").count(), 2, "imagens marcadas como ilustrativas");
+    // faixa só com informações configuradas, sem "Compra segura"
+    const faixa = await page.textContent(".beneficios");
+    assert.match(faixa, /Entrega a combinar/);
+    assert.match(faixa, /\(41\) 99690-7357/);
+    assert.doesNotMatch(await page.textContent("main"), /Compra segura/);
+    assert.equal(await page.getAttribute("#menu a[href='#/tapetes-pet']", "aria-current"), "page");
+    await page.click("a:has-text('Explorar Comedouros')");
+    await page.waitForURL(/#\/comedouros$/);
+    await page.waitForSelector("h1:has-text('Comedouros personalizados')");
+    assert.equal(await page.getAttribute("#menu a[href='#/tapetes-pet']", "aria-current"), "page");
+    assert.match(await page.textContent(".cartao"), /R\$\s69,90/);
+    // a migalha volta para a página das duas categorias
+    await page.click(".migalhas a:has-text('Tapetes pet')");
+    await page.waitForURL(/#\/tapetes-pet$/);
+    await page.waitForSelector(".cartao-pet");
+    await page.click("a:has-text('Explorar Tapetes Personalizados')");
+    await page.waitForURL(/#\/tapetes-foto$/);
+    await page.waitForSelector("h1:has-text('Tapetes com o rosto do seu pet')");
+    assert.match(await page.textContent("main"), /40 × 60 cm/);
+  });
+
+  await cenario("Comedouro: nome obrigatório, tema muda a prévia e o carrinho guarda tudo", async () => {
+    await limpar();
+    await irPara("#/comedouros");
+    await page.click(".cartao >> text=Personalizar");
+    await page.waitForURL(/personalizar\/comedouro\/padrao/);
+    await page.waitForSelector("#nome-pet");
+    assert.match(await page.textContent("[data-nota-potes]"), /Os potes não acompanham o produto/);
+    // sem nome não avança
+    await page.click("[data-adicionar]");
+    assert.match(await page.textContent("[data-pendencia]"), /Digite o nome do seu pet/);
+    assert.equal((await itensCarrinho()).length, 0);
+    // prévia respeita a proporção configurada e muda com o nome e o tema
+    const quadro = () => page.$eval(".previa-palco canvas", c => c.toDataURL());
+    const prop = await page.$eval(".previa-palco canvas", c => c.width / c.height);
+    assert.ok(Math.abs(prop - 1.5) < 0.02, `proporção ${prop}`);
+    assert.equal(await page.locator(".previa-palco canvas").count(), 2, "prévia com e sem os potes");
+    const vazio = await quadro();
+    await page.fill("#nome-pet", "Bento");
+    const comNome = await quadro();
+    assert.notEqual(vazio, comNome);
+    await page.click("label.opcao-tema:has(input[value=rosa])");
+    assert.notEqual(await quadro(), comNome);
+    assert.equal(await page.inputValue("#nome-pet"), "Bento");
+    await page.click("[data-qtd='1']");
+    await page.click("[data-adicionar]");
+    await page.waitForURL(/#\/carrinho/);
+    // segundo comedouro, com outro nome e tema
+    await irPara("#/personalizar/comedouro/padrao");
+    await page.fill("#nome-pet", "Mia e Tom");
+    await page.click("label.opcao-tema:has(input[value=azul])");
+    await page.click("[data-adicionar]");
+    await page.waitForURL(/#\/carrinho/);
+    const itens = await itensCarrinho();
+    assert.equal(itens.length, 2);
+    assert.notEqual(itens[0].id, itens[1].id);
+    assert.deepEqual(itens.map(i => [i.produtoId, i.personalizacao.fonte, i.personalizacao.texto, i.personalizacao.tema.id, i.quantidade]),
+      [["comedouro", "texto", "Bento", "rosa", 2], ["comedouro", "texto", "Mia e Tom", "azul", 1]]);
+    assert.equal(itens[0].precoUnitario, 69.9);
+    const textos = await page.locator(".item").allTextContents();
+    assert.match(textos[0], /Nome: Bento · Tema: Rosa/);
+    assert.match(textos[1], /Nome: Mia e Tom · Tema: Azul/);
+    assert.match(await page.textContent("[data-total]"), /R\$\s209,70/);
+    await limpar();
   });
 
   await cenario("5. Dois mousepads iguais com imagens diferentes ficam separados", async () => {
@@ -586,7 +664,7 @@ async function cenario(nome, fn) {
   });
 
   await cenario("Layout sem rolagem horizontal no celular", async () => {
-    for (const h of ["#/", "#/catalogo", "#/personalizar/mousepad/g", "#/carrinho", "#/privacidade", "#/artes", "#/times", "painel.html#EMP-PAINE1"]) {
+    for (const h of ["#/", "#/catalogo", "#/personalizar/mousepad/g", "#/carrinho", "#/privacidade", "#/artes", "#/times", "#/tapetes-pet", "#/comedouros", "#/tapetes-foto", "#/personalizar/comedouro/padrao", "#/personalizar/tapete-pet/classico", "painel.html#EMP-PAINE1"]) {
       await irPara(h);
       const largura = await page.evaluate(() => document.documentElement.scrollWidth);
       assert.ok(largura <= 390, `${h} tem ${largura}px de largura`);

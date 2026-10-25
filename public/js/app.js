@@ -3,6 +3,7 @@ import { brl, esc, avisar, DISPONIBILIDADE } from "./util.js";
 import { carregarDados, produtosPublicados, acharProduto, acharModelo, artesPublicadas, timesPublicados, nomeColecao, podeComprar } from "./dados.js";
 import * as carrinho from "./carrinho.js";
 import { Personalizador, carregarImagem } from "./personalizador.js";
+import { PersonalizadorComedouro } from "./comedouro.js";
 import { montarPedido, codigoPedido, STATUS, podeMudarStatus } from "./pedidos.js";
 import { lerImagem, apagarImagem } from "./imagens.js";
 import { buscarCep, mascaraCep } from "./cep.js";
@@ -25,7 +26,9 @@ function atualizarContador() {
 function marcarMenu(rota) {
   document.querySelectorAll("#menu a").forEach(a => {
     const alvo = a.getAttribute("href").slice(1);
-    const ativo = alvo === "/" ? rota === "/" : rota.startsWith(alvo);
+    // As duas categorias pet ficam dentro de "Tapetes pet" no menu.
+    const r = /^\/(comedouros|tapetes-foto)/.test(rota) ? "/tapetes-pet" : rota;
+    const ativo = alvo === "/" ? r === "/" : r.startsWith(alvo);
     if (ativo) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
 }
@@ -45,6 +48,7 @@ function descricaoPersonalizacao(p) {
   if (!p) return "";
   if (p.fonte === "arte" && p.arte) return `Arte da loja: ${p.arte.nome}`;
   if (p.fonte === "upload" && p.arquivo) return `Imagem enviada: ${p.arquivo.nome}`;
+  if (p.fonte === "texto" && p.texto) return `Nome: ${p.texto}${p.tema ? ` · Tema: ${p.tema.nome}` : ""}`;
   return "";
 }
 
@@ -53,6 +57,9 @@ const iconePet = `<svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true
 function midiaModelo(produto, modelo, indice = 0) {
   if (modelo.imagens?.length) {
     return `<img src="${esc(modelo.imagens[0])}" alt="${esc(modelo.nome)}" loading="lazy">`;
+  }
+  if (produto.imagemIlustrativa) {
+    return `<img src="${esc(produto.imagemIlustrativa)}" alt="${esc(produto.nome)}: imagem ilustrativa" loading="lazy"><span class="selo-provisoria">Imagem ilustrativa</span>`;
   }
   if (produto.personalizacao.permiteArtes) {
     const artes = artesPublicadas(dados.catalogo);
@@ -93,13 +100,13 @@ function paginaInicio() {
         <div class="dobra-topo">
           <p class="sobretitulo">Produtos personalizados</p>
           <h1 id="dobra-titulo">Sua criatividade. <span class="destaque">Seus produtos.</span> Seu estilo.</h1>
-          <p class="lead">Personalize seu espaço com desk pads exclusivos e transforme a foto do seu melhor amigo em um tapete especial.</p>
+          <p class="lead">Personalize seu espaço com desk pads exclusivos e crie um cantinho especial para a refeição do seu pet.</p>
         </div>
         <div class="dobra-produtos">
           <article class="dobra-produto">
             <div class="cena cena-mesa">
               <div class="deskpad">
-                <img src="assets/vitrine/desk-pad-ilustrativo.svg" alt="Desk pad gamer preto com linhas e formas geométricas em ciano sobre uma mesa" width="1800" height="800" fetchpriority="high">
+                <img src="assets/artes/times/flamengo.jpg" alt="Desk pad do Flamengo, com o escudo do clube sobre fundo vermelho e preto" width="1170" height="480" fetchpriority="high">
               </div>
               <span class="selo-ilustrativo">Imagem ilustrativa</span>
             </div>
@@ -112,14 +119,14 @@ function paginaInicio() {
           </article>
           <article class="dobra-produto">
             <div class="cena cena-piso">
-              <img class="tapete" src="assets/vitrine/tapete-pet-ilustrativo.jpg" alt="Tapete pet retangular com a foto de um cachorro e um gato deitados juntos, sobre piso de madeira" width="674" height="330" fetchpriority="high">
+              <img class="tapete" src="assets/pet/comedouro-vitrine.jpg" alt="Tapete de comedouro cinza com patinhas, dois potes de inox em cima e o nome Miles na faixa preta" width="736" height="414" fetchpriority="high">
               <span class="selo-ilustrativo">Imagem ilustrativa</span>
             </div>
             <div class="dobra-texto">
-              <h2>${iconePet.replace("<svg ", '<svg class="icone" ')}<span>Tapetes Pet <span class="destaque">Personalizados</span></span></h2>
-              <p>Transforme a foto do seu cão ou gato em um tapete feito especialmente para você.</p>
-              <p class="medida">Tamanho: 40 × 60 cm</p>
-              <a class="btn btn-primario" href="#/tapetes-pet">Personalizar Tapete Pet <span aria-hidden="true">→</span></a>
+              <h2>${iconePet.replace("<svg ", '<svg class="icone" ')}<span>Comedouros <span class="destaque">Personalizados</span></span></h2>
+              <p>Um cantinho especial para a hora da refeição, com o nome do seu pet e as cores que você escolher.</p>
+              <p class="medida">Tamanho: 40 × 60 cm · potes não inclusos</p>
+              <a class="btn btn-primario" href="#/comedouros">Explorar Comedouros <span aria-hidden="true">→</span></a>
             </div>
           </article>
         </div>
@@ -317,33 +324,107 @@ function paginaCatalogo() {
     <div class="wrap" style="padding-bottom:48px">
       ${produtos.length ? produtos.map(p => {
         const cat = dados.catalogo.categorias.find(c => c.id === p.categoria);
+        const variosNaCategoria = produtos.filter(x => x.categoria === p.categoria).length > 1;
         return `<section style="margin-bottom:40px">
-          <h2>${esc(cat?.nome || p.nome)}</h2>
-          <p style="color:var(--color-muted)">${esc(cat?.descricao || p.descricao)}</p>
+          <h2>${esc(variosNaCategoria || !cat ? p.nome : cat.nome)}</h2>
+          <p style="color:var(--color-muted)">${esc(variosNaCategoria || !cat ? p.descricao : cat.descricao)}</p>
           <div class="grade">${p.modelos.map(m => cartaoModelo(p, m, `#/personalizar/${p.id}/${m.id}`)).join("")}</div>
         </section>`;
       }).join("") : `<div class="vazio"><h2>Nenhum produto cadastrado</h2><p>Volte em breve.</p></div>`}
     </div>`;
 }
 
+// Página "Tapetes pet": apresenta as duas categorias pet (comedouros e tapetes com foto).
+const CATEGORIAS_PET = [
+  {
+    produtoId: "comedouro",
+    rota: "#/comedouros",
+    titulo: "Comedouros Personalizados",
+    botao: "Explorar Comedouros",
+    destaques: ["Nome do pet ou frase curta", "Temas e cores para escolher", "Prévia antes de comprar", "Personalização fácil, em poucos passos"],
+    alt: "Tapete cinza com patinhas embaixo de dois potes de inox, um com água e outro com ração, e o nome Miles na faixa da frente",
+  },
+  {
+    produtoId: "tapete-pet",
+    rota: "#/tapetes-foto",
+    titulo: "Tapetes com o Rosto do Seu Pet",
+    botao: "Explorar Tapetes Personalizados",
+    destaques: ["Use a foto do seu próprio pet", "Modelos para cães e gatos", "Prévia da arte no tapete", "Ajuste a foto antes de comprar"],
+    alt: "Tapete retangular com a foto de um cachorro e um gato deitados juntos, sobre piso de madeira",
+  },
+];
+
+function faixaBeneficios() {
+  const itens = [];
+  const entrega = dados.loja.entrega;
+  itens.push(["Entrega", entrega.configurada ? "Frete calculado no checkout." : entrega.mensagem || "Entrega a combinar."]);
+  if (modoMercadoPago()) itens.push(["Pagamento", "Pix pelo Mercado Pago, com QR Code no site."]);
+  const whats = String(dados.loja.pedidos?.whatsapp || "").replace(/\D/g, "");
+  if (whats) {
+    const exibido = whats.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
+    itens.push(["Atendimento", `WhatsApp <a href="https://wa.me/${whats}" target="_blank" rel="noopener">${esc(exibido)}</a>`, true]);
+  }
+  return `<ul class="beneficios" aria-label="Informações da loja">${itens.map(([t, d, html]) => `<li><strong>${t}</strong><span>${html ? d : esc(d)}</span></li>`).join("")}</ul>`;
+}
+
+function paginaPet() {
+  titulo("Tapetes pet");
+  const cartoes = CATEGORIAS_PET.map(c => ({ ...c, produto: acharProduto(dados.catalogo, c.produtoId) }))
+    .filter(c => c.produto && c.produto.publicado !== false);
+  main.innerHTML = `
+    <div class="wrap cabecalho-pagina">
+      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / Tapetes pet</nav>
+      <h1>Tapetes pet personalizados</h1>
+      <p>Escolha o modelo ideal e personalize com o nome ou a foto do seu pet.</p>
+    </div>
+    <div class="wrap" style="padding-bottom:48px">
+      ${cartoes.length ? `<div class="categorias-pet">${cartoes.map(c => `
+        <article class="cartao-pet" data-categoria-pet="${esc(c.produtoId)}">
+          <div class="midia">
+            ${c.produto.imagemIlustrativa
+              ? `<img src="${esc(c.produto.imagemIlustrativa)}" alt="${esc(c.alt)}" loading="lazy"><span class="selo-provisoria">Imagem ilustrativa</span>`
+              : `<div class="placeholder-midia">${iconePet}<span>Imagem em breve</span></div>`}
+          </div>
+          <div class="corpo">
+            <h2>${esc(c.titulo)}</h2>
+            <p>${esc(c.produto.descricao)}</p>
+            <ul class="lista-check">${c.destaques.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
+            <a class="btn btn-primario btn-bloco" href="${c.rota}">${esc(c.botao)}</a>
+          </div>
+        </article>`).join("")}</div>` : `<div class="vazio"><p>Nenhum produto pet cadastrado no momento.</p></div>`}
+      ${faixaBeneficios()}
+    </div>`;
+}
+
 function paginaCategoria(produtoId) {
   const p = acharProduto(dados.catalogo, produtoId);
-  const pet = produtoId === "tapete-pet";
-  titulo(pet ? "Tapetes pet" : "Mousepads");
+  const pet = p?.categoria === "pet" || produtoId === "tapete-pet" || produtoId === "comedouro";
+  const nomePagina = produtoId === "comedouro" ? "Comedouros personalizados" : produtoId === "tapete-pet" ? "Tapetes com o rosto do seu pet" : "Mousepads personalizados";
+  titulo(nomePagina);
   if (!p) {
     main.innerHTML = `<div class="wrap vazio"><h1>Nenhum produto cadastrado</h1><p>Esta categoria ainda não tem produtos.</p><a class="btn btn-escuro" href="#/catalogo">Ver catálogo</a></div>`;
     return;
   }
+  let intro;
+  if (produtoId === "comedouro") {
+    intro = `
+        <p>${esc(p.descricao)}</p>
+        <p class="aviso aviso-info" style="max-width:40em">Você escolhe o tema, digita o nome do seu pet (ou uma frase curta) e vê a prévia antes de colocar no carrinho.</p>`;
+  } else if (produtoId === "tapete-pet") {
+    const rotulos = [...new Set(p.modelos.map(m => m.dimensoes?.rotulo).filter(Boolean))];
+    intro = `
+        <p>${esc(p.descricao)} Para <strong>cães e gatos</strong>.</p>
+        ${rotulos.length === 1 ? `<p><span class="etiqueta">Tamanho único: ${esc(rotulos[0])}</span></p>` : ""}
+        <p class="aviso aviso-info" style="max-width:40em">Para personalizar, você vai precisar de uma foto do seu cão ou gato. Fotos nítidas e bem iluminadas dão o melhor resultado.</p>`;
+  } else {
+    intro = `<p>Escolha o tamanho, use uma das artes da loja ou envie a sua imagem: jogos, fotos, paisagens, pets, ilustrações ou arte abstrata.</p>
+        <div class="acoes-linha"><a class="btn btn-primario" href="#/artes">Escolher arte da loja</a><a class="btn btn-contorno" href="#/personalizar/mousepad/m?fonte=upload">Enviar minha imagem</a><a class="btn btn-texto" href="#/times">Mousepads de times</a></div>`;
+  }
   main.innerHTML = `
     <div class="wrap cabecalho-pagina">
-      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / ${pet ? "Tapetes pet" : "Mousepads"}</nav>
-      <h1>${pet ? "Tapetes pet personalizados" : "Mousepads personalizados"}</h1>
-      ${pet ? `
-        <p>Tapete exclusivo para <strong>cães e gatos</strong>, personalizado com a foto do seu animal.</p>
-        <p><span class="etiqueta">Tamanho único: 40 × 60 cm</span></p>
-        <p class="aviso aviso-info" style="max-width:40em">Para personalizar, você vai precisar de uma foto do seu cão ou gato. Fotos nítidas e bem iluminadas dão o melhor resultado.</p>`
-      : `<p>Escolha o tamanho, use uma das artes da loja ou envie a sua imagem: jogos, fotos, paisagens, pets, ilustrações ou arte abstrata.</p>
-        <div class="acoes-linha"><a class="btn btn-primario" href="#/artes">Escolher arte da loja</a><a class="btn btn-contorno" href="#/personalizar/mousepad/m?fonte=upload">Enviar minha imagem</a><a class="btn btn-texto" href="#/times">Mousepads de times</a></div>`}
+      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / ${pet ? `<a href="#/tapetes-pet">Tapetes pet</a> / ${esc(nomePagina)}` : "Mousepads"}</nav>
+      <h1>${esc(nomePagina)}</h1>
+      ${intro}
     </div>
     <div class="wrap" style="padding-bottom:48px">
       <h2 class="sr-only">Modelos</h2>
@@ -360,11 +441,14 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
     return;
   }
   const pet = p.personalizacao.tipo === "upload_obrigatorio";
+  const comedouro = p.personalizacao.tipo === "texto";
+  const migalhaPet = comedouro ? `<a href="#/tapetes-pet">Tapetes pet</a> / <a href="#/comedouros">Comedouros</a>`
+    : pet ? `<a href="#/tapetes-pet">Tapetes pet</a> / <a href="#/tapetes-foto">Tapetes com foto</a>` : `<a href="#/mousepads">Mousepads</a>`;
   titulo(`Personalizar ${m.nome}`);
   main.innerHTML = `
     <div class="wrap cabecalho-pagina">
-      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / <a href="${pet ? "#/tapetes-pet" : "#/mousepads"}">${pet ? "Tapetes pet" : "Mousepads"}</a> / ${esc(m.nome)}</nav>
-      <h1>${esc(pet ? `Tapete pet: ${m.nome}` : m.nome)}</h1>
+      <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / ${migalhaPet} / ${esc(m.nome)}</nav>
+      <h1>${esc(pet ? `Tapete com foto: ${m.nome}` : m.nome)}</h1>
       <p>${esc(m.descricao || p.descricao)} <strong>${esc(m.dimensoes.rotulo)}</strong>.</p>
     </div>
     <div class="wrap personalizador">
@@ -400,7 +484,20 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
   if (m.previa?.moldura) { try { moldura = await carregarImagem(m.previa.moldura); } catch { moldura = null; } }
 
   personalizadorAtivo?.destruir();
-  const pz = new Personalizador({
+  const aoMudar = est => { if (est.pronto) main.querySelector("[data-pendencia]").textContent = ""; };
+  const notaPotes = p.incluiPotes === true ? "Os potes acompanham o produto."
+    : p.incluiPotes === false ? "Os potes não acompanham o produto: são só ilustração."
+    : "Consulte a loja se os potes acompanham o produto.";
+  const pz = comedouro ? new PersonalizadorComedouro({
+    previa: main.querySelector("[data-previa]"),
+    controles: main.querySelector("[data-controles]"),
+    regras: p.personalizacao,
+    proporcao: m.previa?.proporcao || (m.dimensoes.larguraCm && m.dimensoes.alturaCm ? m.dimensoes.larguraCm / m.dimensoes.alturaCm : 1.6),
+    proporcaoProvisoria: Boolean(m.previa?.provisoria),
+    legenda: m.dimensoes.rotulo,
+    notaPotes,
+    aoMudar,
+  }) : new Personalizador({
     previa: main.querySelector("[data-previa]"),
     controles: main.querySelector("[data-controles]"),
     dimensoes: m.dimensoes,
@@ -415,7 +512,7 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
     upload: dados.loja.upload,
     legenda: `${pet ? m.nome + " · " : ""}${m.dimensoes.rotulo}`,
     moldura,
-    aoMudar: est => { if (est.pronto) main.querySelector("[data-pendencia]").textContent = ""; },
+    aoMudar,
   });
   personalizadorAtivo = pz;
 
@@ -452,7 +549,12 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
         precoUnitario: typeof m.preco === "number" ? m.preco : null,
         quantidade: Number(qtd.value),
         miniatura,
-        personalizacao: {
+        personalizacao: comedouro ? {
+          fonte: "texto",
+          texto: est.texto,
+          tema: est.tema,
+          imagemFinalPx: { largura, altura },
+        } : {
           fonte: est.fonte,
           arte: est.arte,
           arquivo: est.arquivo,
@@ -1124,7 +1226,9 @@ async function rotear() {
     case undefined: paginaInicio(); break;
     case "catalogo": paginaCatalogo(); break;
     case "mousepads": paginaCategoria("mousepad"); break;
-    case "tapetes-pet": paginaCategoria("tapete-pet"); break;
+    case "tapetes-pet": paginaPet(); break;
+    case "comedouros": paginaCategoria("comedouro"); break;
+    case "tapetes-foto": paginaCategoria("tapete-pet"); break;
     case "personalizar": await paginaPersonalizar(partes[1], partes[2], params); break;
     case "artes": paginaArtes(); break;
     case "times": paginaTimes(); break;

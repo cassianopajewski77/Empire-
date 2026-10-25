@@ -27,7 +27,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 | Item | Situação no site |
 | --- | --- |
-| Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido). |
+| Preços | Definidos pelo Cassiano em 25/10/2026: mousepad P R$ 19,90, M R$ 24,90, G R$ 109,90; tapete pet R$ 69,90 (Clássico e Divertido); comedouro R$ 69,90. |
 | Pagamento Pix | Modo `mercadopago` (escolha do Cassiano): o servidor da loja (`src/worker.js`) cria a cobrança Pix no Mercado Pago com o valor calculado a partir do catálogo, e o site mostra o QR Code e o copia e cola. A página consulta o status pelo servidor e marca "Pagamento confirmado" só quando o Mercado Pago responde `approved`. Sem o segredo `MP_ACCESS_TOKEN` ou sem preço definido, o site avisa e manda combinar pelo WhatsApp. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
 | Envio do pedido | O pedido é registrado no servidor da loja e aparece no painel. O cliente ainda envia as imagens pelo WhatsApp (41) 99690-7357. |
@@ -35,6 +35,8 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Artes da galeria | 10 conceitos originais (Cyber Empire, Dragão, Galáxia, Topográfico, Pet Lovers, Minimalista, Retro Wave, Arte Oriental, Mapa Mundi, Mármore) gerados por programa como demonstração, com o selo "Arte provisória". Nenhum é recorte do cartaz de referência. Precisam ser trocados pelas artes finais (ver README). |
 | Times de futebol | 18 clubes cadastrados. 13 aprovados pelos clubes, segundo o Cassiano em 25/10/2026 (Palmeiras, Flamengo, Corinthians, São Paulo, Santos, Grêmio, Internacional, Atlético Mineiro, Vasco, Botafogo, Coritiba, Athletico Paranaense e Paraná Clube), à venda com imagem de vitrine recortada do cartaz e o selo "Imagem ilustrativa". A impressão precisa dos arquivos originais em alta resolução. Cruzeiro, Fluminense, Bahia, Sport Recife e Fortaleza continuam "Em breve". |
+| Comedouros personalizados | Página `#/comedouros` e personalizador próprio (`public/js/comedouro.js`): nome ou frase curta (até 14 letras) e 6 temas de cor (Preto e cinza, igual à foto de referência, Ciano Empire, Rosa, Amarelo, Areia e Azul). Prévia em duas imagens, com os potes (ilustração) e sem os potes. Dados do Cassiano em 25/10/2026: R$ 69,90, 40 × 60 cm, potes não acompanham (`incluiPotes: false`). A imagem da vitrine é recortada da referência, com o nome trocado para "Miles" e o selo "Imagem ilustrativa". Falta informar o material. |
+| Página Tapetes pet | `#/tapetes-pet` mostra as duas categorias (comedouros e tapetes com o rosto do pet), com imagens marcadas "Imagem ilustrativa" e uma faixa só com informações reais: entrega (de `loja.json`), Pix pelo Mercado Pago e WhatsApp da loja. Não há selo de "compra segura". |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
 
 ## 4. Status de pedido
@@ -74,13 +76,14 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 2. Para o envio automático: conta da Meta, modelos aprovados e os segredos `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` (passo a passo no README).
 3. Cadastrar descrição e imagem de referência dos Modelos Clássico e Divertido.
 4. Trocar as 10 artes provisórias pelas artes finais.
-5. Times: guardar a aprovação de cada clube e mandar os arquivos originais em alta resolução para a impressão (as imagens do site são só vitrine).
+5. Comedouros: informar o material e mandar fotos reais do produto.
+6. Times: guardar a aprovação de cada clube e mandar os arquivos originais em alta resolução para a impressão (as imagens do site são só vitrine).
 
 ## 8. Testes
 
-`npm test` roda 13 testes do servidor (`tests/worker.test.mjs`) e 18 cenários no Chromium em tela de celular:
+`npm test` roda 15 testes do servidor (`tests/worker.test.mjs`) e 20 cenários no Chromium em tela de celular:
 
-1. Página inicial com a primeira dobra (desk pad e tapete pet) e os botões.
+1. Página inicial com a primeira dobra em fundo branco (desk pad do Flamengo e comedouro) e os botões.
 2. Mousepad com arte pronta, sem enviar imagem.
 3. Mousepad com imagem própria, zoom, setas e arrastar.
 4. Tapete pet sem foto: o site bloqueia e mostra a mensagem.
@@ -90,13 +93,15 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 8. Arquivo inválido, grande demais ou corrompido é recusado com mensagem.
 9. Remover itens até o carrinho ficar vazio.
 10. Checkout valida os campos, mantém os dados ao voltar e cria o pedido em "Aguardando pagamento", sem confirmar pagamento.
-11. Nenhuma página tem rolagem horizontal no celular (inclui galeria e times).
+11. Nenhuma página tem rolagem horizontal no celular (inclui galeria, times e as páginas pet).
 12. CEP preenche o endereço (com o ViaCEP simulado), avisa CEP inexistente e CEP geral de cidade.
 13. Pix pelo Mercado Pago (simulado): e-mail obrigatório, QR Code com o valor do servidor, sem cobrança duplicada ao recarregar, e confirmação automática.
 14. Pix sem preço definido: avisa e manda combinar pelo WhatsApp.
 15. Painel: senha, confirmação manual, rastreio, mensagens no WhatsApp (simuladas) e rastreio na página do cliente.
 16. Galeria de artes: 10 artes com selo provisório, filtro por coleção, busca, escolha da arte, troca de tamanho mantendo a arte e proporção da prévia em cada tamanho, arte certa no carrinho.
 17. Times: 18 clubes com Coritiba, Athletico Paranaense e Paraná Clube, filtro por clube, nenhum escudo, times sem licença fora de venda.
-18. Nenhum erro de JavaScript.
+18. Página Tapetes pet: dois cartões, imagens carregadas e marcadas como ilustrativas, faixa sem "Compra segura", botões levando a `#/comedouros` e `#/tapetes-foto`, menu marcado e migalha de volta.
+19. Comedouro: nome obrigatório, prévia na proporção configurada mudando com nome e tema, quantidade, dois comedouros diferentes separados no carrinho com nome, tema e o total certo (R$ 69,90 cada).
+20. Nenhum erro de JavaScript.
 
-Resultado em 25/10/2026: 13 de 13 e 18 de 18 passaram (três rodadas seguidas).
+Resultado em 25/10/2026: 15 de 15 e 20 de 20 passaram.

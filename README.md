@@ -1,6 +1,6 @@
 # Mats & Mouse Pads Empire
 
-Loja online de mousepads personalizados e tapetes pet (cães e gatos) com a foto do animal.
+Loja online de mousepads personalizados e tapetes pet (cães e gatos): comedouros com o nome do pet e tapetes com a foto do animal.
 Site estático em HTML, CSS e JavaScript puro, sem etapa de build, publicado pela Cloudflare (Workers Builds, só arquivos estáticos).
 
 ## Como rodar no computador
@@ -55,6 +55,15 @@ Sem esta configuração, o painel mostra o botão **Abrir no WhatsApp** com a me
 
 A Meta cobra por mensagem de modelo enviada. Só recebe mensagem o cliente que marcou a opção no checkout. Os nomes dos modelos, o idioma e a versão da API ficam em `public/data/loja.json` (`notificacoes.whatsapp`).
 
+
+## Comedouros personalizados
+
+O produto `comedouro` em `catalogo.json` usa `personalizacao.tipo: "texto"`: o cliente digita o nome do pet ou uma frase curta (`textoMax`) e escolhe um tema da lista `temas` (cada tema tem as cores `fundo`, `faixa`, `patinhas`, `texto` e `destaque`). Para definir o produto:
+
+- `modelos[0].preco`: o preço (hoje 69.9). Com `null`, aparece "Preço a definir" e o Pix não é gerado.
+- `modelos[0].dimensoes`: largura e altura em cm (hoje 60 × 40) e o `rotulo`; a prévia usa essa proporção. Para uma prévia provisória sem medida, use `previa.proporcao` e `previa.provisoria: true`.
+- `incluiPotes`: `true` (os potes acompanham), `false` (não acompanham, como hoje) ou `null` (o site pede para consultar a loja). Os potes na prévia são só ilustração e não entram no arquivo de impressão.
+- `imagemIlustrativa`: imagem de vitrine, sempre com o selo "Imagem ilustrativa". Troque por uma foto real quando houver.
 ## O que editar sem programar
 
 | Arquivo | Para quê |
