@@ -506,6 +506,8 @@ async function cenario(nome, fn) {
     await page.waitForSelector("[data-ajustes]:not([hidden])");
     assert.equal(await page.isChecked("input[name=arte][value=cyber-empire]"), true);
     assert.match(await page.textContent("[data-legenda]"), /30 × 25 cm/);
+    assert.ok(await page.isVisible("[data-aviso-previa]"));
+    assert.match(await page.textContent("[data-aviso-previa]"), /Prévia ilustrativa/);
     const proporcao = () => page.$eval(".previa-palco canvas", c => c.width / c.height);
     const pM = await proporcao();
     await page.click("label.opcao:has(input[name=modelo][value=g])");
