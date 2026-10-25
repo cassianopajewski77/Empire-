@@ -126,14 +126,6 @@ function paginaInicio() {
       </div>
     </section>
 
-    <section class="secao secao-cinza">
-      <div class="wrap">
-        <p class="sobretitulo">Destaques</p>
-        <h2>Escolha e <span class="destaque">personalize</span></h2>
-        ${destaques.length ? `<div class="grade">${destaques.join("")}</div>` : `<div class="vazio"><p>Nenhum produto cadastrado no momento.</p></div>`}
-      </div>
-    </section>
-
     <section class="secao" id="como">
       <div class="wrap">
         <p class="sobretitulo">Como funciona</p>
@@ -158,6 +150,14 @@ function paginaInicio() {
         <h2>Pronto para criar o seu?</h2>
         <p>Escolha o produto, coloque a sua imagem e veja a prévia antes de comprar.</p>
         <a class="btn btn-escuro" href="#/catalogo">Começar a personalizar</a>
+      </div>
+    </section>
+
+    <section class="secao">
+      <div class="wrap">
+        <p class="sobretitulo">Destaques</p>
+        <h2>Escolha e <span class="destaque">personalize</span></h2>
+        ${destaques.length ? `<div class="grade">${destaques.join("")}</div>` : `<div class="vazio"><p>Nenhum produto cadastrado no momento.</p></div>`}
       </div>
     </section>`;
 }
