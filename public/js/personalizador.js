@@ -68,6 +68,7 @@ export class Personalizador {
           <span data-legenda></span>
           <label><input type="checkbox" data-area checked> Mostrar margem de segurança</label>
         </div>
+        <p class="aviso-previa" data-aviso-previa><strong>Prévia ilustrativa.</strong> A peça impressa pode ter pequenas diferenças de cor e de enquadramento.</p>
       </div>`;
 
     const blocoArtes = regras.permiteArtes ? `
