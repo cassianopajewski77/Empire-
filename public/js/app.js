@@ -5,6 +5,7 @@ import * as carrinho from "./carrinho.js";
 import { Personalizador, carregarImagem } from "./personalizador.js";
 import { montarPedido, STATUS } from "./pedidos.js";
 import { lerImagem, apagarImagem } from "./imagens.js";
+import { buscarCep, mascaraCep } from "./cep.js";
 
 const main = document.getElementById("conteudo");
 let dados;
@@ -476,6 +477,7 @@ function paginaCheckout() {
 
   const form = main.querySelector("[data-form]");
   form.addEventListener("input", () => gravarForm(Object.fromEntries(new FormData(form))));
+  ligarBuscaCep(form);
   form.addEventListener("submit", e => {
     e.preventDefault();
     const valores = Object.fromEntries(new FormData(form));
@@ -494,6 +496,50 @@ function paginaCheckout() {
       return;
     }
     location.hash = "#/checkout/revisao";
+  });
+}
+
+/** Ao completar o CEP, preenche rua, bairro, cidade e estado. O cliente pode corrigir depois. */
+function ligarBuscaCep(form) {
+  const cep = form.elements.cep;
+  const status = document.createElement("div");
+  status.className = "dica";
+  status.id = "status-cep";
+  status.setAttribute("aria-live", "polite");
+  form.querySelector("#erro-cep").after(status);
+  cep.setAttribute("aria-describedby", "erro-cep status-cep");
+  let ultimo = cep.value.replace(/\D/g, "");
+
+  cep.addEventListener("input", async () => {
+    const formatado = mascaraCep(cep.value);
+    if (formatado !== cep.value) cep.value = formatado;
+    const digitos = formatado.replace(/\D/g, "");
+    if (digitos.length !== 8 || digitos === ultimo) return;
+    ultimo = digitos;
+    status.textContent = "Buscando endereço…";
+    try {
+      const end = await buscarCep(digitos);
+      if (cep.value.replace(/\D/g, "") !== digitos) return; // o cliente mudou o CEP enquanto buscava
+      if (!end) { status.textContent = "CEP não encontrado. Confira o número ou preencha o endereço."; return; }
+      form.elements.estado.value = end.estado;
+      form.elements.cidade.value = end.cidade;
+      form.elements.bairro.value = end.bairro;
+      form.elements.rua.value = end.rua;
+      ["estado", "cidade", "bairro", "rua"].forEach(id => {
+        form.elements[id].removeAttribute("aria-invalid");
+        form.querySelector(`#erro-${id}`).textContent = "";
+      });
+      gravarForm(Object.fromEntries(new FormData(form)));
+      if (end.rua) {
+        status.textContent = "Endereço encontrado. Confira e informe o número.";
+        form.elements.numero.focus();
+      } else {
+        status.textContent = "Este CEP é da cidade toda. Preencha a rua e o bairro.";
+        form.elements.bairro.focus();
+      }
+    } catch {
+      status.textContent = "Não foi possível buscar o CEP agora. Preencha o endereço.";
+    }
   });
 }
 
@@ -699,6 +745,7 @@ function paginaPrivacidade() {
       <ul>
         <li>As imagens são processadas no seu próprio navegador. Elas <strong>não são enviadas a nenhum servidor</strong> por este site.</li>
         <li>O carrinho, as imagens personalizadas e o resumo do último pedido ficam guardados só neste aparelho, no armazenamento do navegador. Você pode apagá-los limpando os dados do site no navegador.</li>
+        <li>Quando você digita o CEP no checkout, só o número do CEP é consultado no serviço público ViaCEP para preencher o endereço.</li>
         <li>Os dados só chegam à loja quando você envia o pedido pelo canal indicado (por exemplo, WhatsApp). A partir daí, valem também as regras desse serviço.</li>
       </ul>
       <h2>Para que usamos</h2>

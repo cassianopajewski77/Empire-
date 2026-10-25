@@ -48,6 +48,12 @@ async function cenario(nome, fn) {
   page.on("pageerror", e => errosJS.push(e.message));
   // As fontes externas não são necessárias para os testes.
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  // ViaCEP simulado: os testes não dependem da internet.
+  const CEPS = { "80010000": { logradouro: "Rua XV de Novembro", bairro: "Centro", localidade: "Curitiba", uf: "PR" }, "83700000": { logradouro: "", bairro: "", localidade: "Araucária", uf: "PR" } };
+  await page.route(/viacep\.com\.br\/ws\/(\d{8})\/json/, r => {
+    const cep = r.request().url().match(/ws\/(\d{8})/)[1];
+    r.fulfill({ json: CEPS[cep] || { erro: "true" }, headers: { "Access-Control-Allow-Origin": "*" } });
+  });
 
   const irPara = async hash => { await page.goto(base + hash); await page.waitForSelector("main > *:not(noscript)"); };
   const itensCarrinho = () => page.evaluate(() => JSON.parse(localStorage.getItem("empire-carrinho-v1") || "[]"));
@@ -248,6 +254,31 @@ async function cenario(nome, fn) {
     assert.equal(pedido.pagamento.confirmado, false);
     assert.equal(pedido.itens[0].personalizacao.arte.id, "abstrato");
     assert.equal((await itensCarrinho()).length, 0);
+  });
+
+  await cenario("CEP preenche o endereço automaticamente", async () => {
+    await irPara("#/personalizar/mousepad/p");
+    await page.click("label.opcao:has(input[value=arte])");
+    await page.click("label.opcao-arte:has(input[value=ceu-pastel])");
+    await page.waitForSelector("[data-ajustes]:not([hidden])");
+    await page.click("[data-adicionar]");
+    await page.waitForURL(/#\/carrinho/);
+    await page.click("text=Finalizar compra");
+    await page.evaluate(() => sessionStorage.clear());
+    await irPara("#/carrinho"); await irPara("#/checkout");
+    await page.fill("#cep", "80010000");
+    await page.waitForFunction(() => document.querySelector("#rua").value === "Rua XV de Novembro");
+    assert.equal(await page.inputValue("#cep"), "80010-000");
+    assert.equal(await page.inputValue("#bairro"), "Centro");
+    assert.equal(await page.inputValue("#cidade"), "Curitiba");
+    assert.equal(await page.inputValue("#estado"), "PR");
+    assert.match(await page.textContent("#status-cep"), /Endereço encontrado/);
+    assert.equal(await page.evaluate(() => document.activeElement.id), "numero");
+    await page.fill("#cep", "99999999");
+    await page.waitForFunction(() => /CEP não encontrado/.test(document.querySelector("#status-cep").textContent));
+    await page.fill("#cep", "83700000");
+    await page.waitForFunction(() => /cidade toda/.test(document.querySelector("#status-cep").textContent));
+    assert.equal(await page.inputValue("#cidade"), "Araucária");
   });
 
   await cenario("Layout sem rolagem horizontal no celular", async () => {

@@ -18,6 +18,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 - **Aviso de qualidade.** Se a foto tiver menos de 40 px por cm na área usada (cerca de 100 dpi, valor configurável), o site avisa que a impressão pode ficar sem nitidez.
 - **Carrinho.** Cada personalização recebe um id próprio, então dois mousepads iguais com imagens diferentes ficam como itens separados. No carrinho o preço acompanha o catálogo. No pedido, o preço é copiado no momento da confirmação e não muda depois.
 - **Checkout sem conta**, com validação de nome, telefone com DDD, e-mail (opcional), CEP de 8 dígitos e UF, mais etapa de revisão com "Corrigir dados" e "Alterar produtos".
+- **CEP automático.** Ao digitar os 8 números do CEP, o checkout consulta o ViaCEP (serviço público, sem chave) e preenche rua, bairro, cidade e estado. Só o CEP é enviado. Se o CEP não existir ou o serviço falhar, o cliente preenche à mão.
 - **Logo.** Usei a logo enviada pelo Cassiano no cabeçalho, no rodapé e nos ícones (favicon e tela inicial do celular).
 - **Tamanhos dos mousepads.** Usei P, M e G, que já tinham sido definidos antes neste projeto. O "não inventar dimensões" do documento foi respeitado: nenhuma outra medida, espessura ou material novo foi criado.
 - **Artes prontas.** Fiz quatro artes de demonstração a partir do croqui (Neon Gamer, Alviverde Coxa, Céu Pastel e Abstrato Empire). A do Coritiba usa só as cores e o apelido, sem o escudo, que é marca registrada.
@@ -61,7 +62,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 8. Testes
 
-`npm test` roda 12 cenários no Chromium em tela de celular:
+`npm test` roda 13 cenários no Chromium em tela de celular:
 
 1. Página inicial com marca, chamadas e categorias.
 2. Mousepad com arte pronta, sem enviar imagem.
@@ -74,8 +75,9 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 9. Remover itens até o carrinho ficar vazio.
 10. Checkout valida os campos, mantém os dados ao voltar e cria o pedido em "Aguardando pagamento", sem confirmar pagamento.
 11. Nenhuma página tem rolagem horizontal no celular.
-12. Nenhum erro de JavaScript.
+12. CEP preenche o endereço (com o ViaCEP simulado), avisa CEP inexistente e CEP geral de cidade.
+13. Nenhum erro de JavaScript.
 
-Resultado em 25/10/2026: 12 de 12 passaram.
+Resultado em 25/10/2026: 13 de 13 passaram.
 
 A especificação recebida terminou no "Cenário 7 — Arquivo inválido". Se havia mais cenários ou seções depois disso, eles ainda não foram implementados.
