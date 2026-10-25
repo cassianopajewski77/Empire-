@@ -3,7 +3,7 @@ import { brl, esc, avisar, DISPONIBILIDADE } from "./util.js";
 import { carregarDados, produtosPublicados, acharProduto, acharModelo, artesPublicadas, podeComprar } from "./dados.js";
 import * as carrinho from "./carrinho.js";
 import { Personalizador, carregarImagem } from "./personalizador.js";
-import { montarPedido, STATUS, podeMudarStatus } from "./pedidos.js";
+import { montarPedido, codigoPedido, STATUS, podeMudarStatus } from "./pedidos.js";
 import { lerImagem, apagarImagem } from "./imagens.js";
 import { buscarCep, mascaraCep } from "./cep.js";
 
@@ -478,6 +478,10 @@ function paginaCheckout() {
         <div class="form-grade">
           ${camposCheckout().map(c => campoHTML(c, v[c.id])).join("")}
         </div>
+        <label class="consentimento">
+          <input type="checkbox" name="aceitaWhatsApp" value="sim" ${v.aceitaWhatsApp ? "checked" : ""}>
+          <span>Quero receber pelo WhatsApp a confirmação do pagamento e o código de rastreio da entrega.</span>
+        </label>
         <p class="msg-campo" data-resumo-erros role="alert"></p>
         <button class="btn btn-primario" type="submit">Revisar pedido</button>
         <a class="btn btn-texto" href="#/carrinho">Voltar ao carrinho</a>
@@ -599,6 +603,7 @@ function paginaRevisao() {
           ${esc(v.rua)}, ${esc(v.numero)}${v.complemento ? " · " + esc(v.complemento) : ""}<br>
           ${esc(v.bairro)} · ${esc(v.cidade)}/${esc(v.estado)} · CEP ${esc(v.cep)}</p>
         ${v.observacoes ? `<p><strong>Observações:</strong> ${esc(v.observacoes)}</p>` : ""}
+        <p>${v.aceitaWhatsApp ? "Você vai receber a confirmação e o rastreio pelo WhatsApp." : "Você não pediu avisos pelo WhatsApp."}</p>
         <a class="btn btn-texto" href="#/checkout">Corrigir dados</a>
         <a class="btn btn-texto" href="#/carrinho">Alterar produtos</a>
         <h2 style="font-size:1.2rem;margin-top:24px">Pagamento</h2>
@@ -622,14 +627,17 @@ function paginaRevisao() {
     const anterior = lerUltimoPedido();
     const pedido = montarPedido({
       itens: lista,
-      cliente: { nome: v.nome.trim(), telefone: v.telefone.trim(), email: (v.email || "").trim() },
+      cliente: { nome: v.nome.trim(), telefone: v.telefone.trim(), email: (v.email || "").trim(), aceitaWhatsApp: Boolean(v.aceitaWhatsApp) },
       endereco: { cep: v.cep, estado: v.estado, cidade: v.cidade, bairro: v.bairro, rua: v.rua, numero: v.numero, complemento: v.complemento || null },
       observacoes: (v.observacoes || "").trim(),
       totais: tot,
       loja: dados.loja,
     });
-    if (!gravarUltimoPedido(pedido)) {
+    e.target.textContent = "Registrando o pedido…";
+    const registrado = await registrarNoServidor(pedido);
+    if (!gravarUltimoPedido(registrado)) {
       e.target.disabled = false;
+      e.target.textContent = "Confirmar pedido";
       avisar("Não foi possível guardar o pedido neste navegador. Tente novamente.");
       return;
     }
@@ -643,6 +651,59 @@ function paginaRevisao() {
 const CHAVE_PEDIDO = "empire-ultimo-pedido";
 function lerUltimoPedido() { try { return JSON.parse(localStorage.getItem(CHAVE_PEDIDO)); } catch { return null; } }
 function gravarUltimoPedido(p) { try { localStorage.setItem(CHAVE_PEDIDO, JSON.stringify(p)); return true; } catch { return false; } }
+
+/**
+ * Registra o pedido no servidor da loja, que recalcula os preços e devolve a
+ * chave de acompanhamento. Sem conexão, o pedido continua só neste navegador
+ * e pode ser registrado depois.
+ */
+async function registrarNoServidor(p) {
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    try {
+      const resp = await fetch("api/pedidos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          codigo: p.codigo,
+          cliente: p.cliente,
+          endereco: p.endereco,
+          observacoes: p.observacoes,
+          itens: p.itens.map(i => ({ produtoId: i.produtoId, modeloId: i.modeloId, quantidade: i.quantidade, fonte: i.personalizacao?.fonte, personalizacaoTexto: descricaoPersonalizacao(i.personalizacao) })),
+        }),
+      });
+      const r = await resp.json().catch(() => ({}));
+      if (resp.status === 409 && r.codigoErro === "codigo_repetido") { p = { ...p, codigo: codigoPedido() }; continue; }
+      if (!resp.ok) return { ...p, registro: { erro: r.erro || "Não foi possível registrar o pedido." } };
+      return {
+        ...p,
+        chave: r.chave,
+        registro: { ok: true },
+        status: r.status,
+        valores: { ...p.valores, ...r.valores },
+        itens: p.itens.map((i, n) => ({ ...i, precoUnitario: r.itens?.[n]?.precoUnitario ?? i.precoUnitario })),
+      };
+    } catch {
+      return { ...p, registro: { erro: "Sem conexão com a loja." } };
+    }
+  }
+  return { ...p, registro: { erro: "Não foi possível registrar o pedido." } };
+}
+
+/** Traz do servidor o status e o rastreio mais recentes do pedido. */
+async function sincronizarPedido(p) {
+  if (!p.chave) return null;
+  try {
+    const resp = await fetch(`api/pedidos/${encodeURIComponent(p.codigo)}?chave=${encodeURIComponent(p.chave)}`, { cache: "no-store" });
+    if (!resp.ok) return null;
+    const r = await resp.json();
+    const atual = lerUltimoPedido();
+    if (atual?.codigo !== p.codigo) return null;
+    if (atual.status === r.status && JSON.stringify(atual.rastreio || null) === JSON.stringify(r.rastreio)) return null;
+    const novo = { ...atual, status: r.status, rastreio: r.rastreio, pagamento: { ...atual.pagamento, confirmado: r.pagamentoConfirmado } };
+    gravarUltimoPedido(novo);
+    return novo;
+  } catch { return null; }
+}
 
 function textoPedido(p) {
   const L = [];
@@ -690,8 +751,10 @@ function paginaPedido() {
   main.innerHTML = `
     <div class="wrap cabecalho-pagina">
       <h1>Pedido ${esc(p.codigo)}</h1>
-      <p>Status: <span class="status-pedido ${p.status === "pagamento_confirmado" ? "pago" : ""}">${esc(STATUS[p.status] || p.status)}</span></p>
+      <p>Status: <span class="status-pedido ${p.pagamento?.confirmado && p.status !== "cancelado" ? "pago" : ""}">${esc(STATUS[p.status] || p.status)}</span></p>
     </div>
+    ${p.rastreio ? `<div class="wrap"><p class="aviso aviso-sucesso" data-rastreio><strong>Pedido enviado 📦</strong>${esc(p.rastreio.transportadora)} · código de rastreio <strong>${esc(p.rastreio.codigo)}</strong>${p.rastreio.link ? `<br><a href="${esc(p.rastreio.link)}" target="_blank" rel="noopener">Acompanhar a entrega</a>` : ""}</p></div>` : ""}
+    ${p.registro?.erro ? `<div class="wrap"><p class="aviso aviso-alerta" data-registro><strong>O pedido ainda não chegou ao sistema da loja.</strong>${esc(p.registro.erro)} Envie o pedido pelo WhatsApp ou tente de novo.</p><p><button type="button" class="btn btn-escuro" data-registrar>Tentar registrar de novo</button></p></div>` : ""}
     <div class="wrap texto-longo" style="max-width:none">
       <div class="grade-2">
         ${mp ? `<section>
@@ -728,11 +791,20 @@ function paginaPedido() {
         </table>
       </div>
       <p style="margin-top:12px"><strong>Total: ${brl(p.valores.total, "a definir")}</strong> · Entrega: ${esc(p.valores.frete != null ? brl(p.valores.frete) : p.valores.entregaMensagem)}</p>
-      <p style="color:var(--color-muted);font-size:.9rem">Este resumo fica guardado só neste navegador.</p>
+      <p style="color:var(--color-muted);font-size:.9rem">${p.chave ? `O pedido foi registrado na loja.${p.cliente.aceitaWhatsApp ? " Você recebe a confirmação e o rastreio pelo WhatsApp." : ""} As imagens personalizadas ficam só neste navegador até você enviar pelo WhatsApp.` : "Este resumo fica guardado só neste navegador."}</p>
       <a class="btn btn-escuro" href="#/catalogo">Voltar ao catálogo</a>
     </div>`;
 
   if (mp) iniciarPagamentoMercadoPago(p);
+  main.querySelector("[data-registrar]")?.addEventListener("click", async e => {
+    e.target.disabled = true;
+    const atual = lerUltimoPedido() || p;
+    const r = await registrarNoServidor(atual);
+    gravarUltimoPedido(r);
+    if (r.registro?.erro) avisar(r.registro.erro);
+    paginaPedido();
+  });
+  if (p.chave && (!mp || p.pagamento.confirmado)) sincronizarPedido(p).then(novo => { if (novo && location.hash === "#/pedido") paginaPedido(); });
   main.querySelector("[data-baixar-resumo]").addEventListener("click", () => {
     baixar(new Blob([textoPedido(p).replace(/\*/g, "")], { type: "text/plain;charset=utf-8" }), `pedido-${p.codigo}.txt`);
   });
@@ -758,6 +830,10 @@ async function iniciarPagamentoMercadoPago(p, novaTentativa = false) {
   pararConsultaPix();
   if (p.pagamento.confirmado) return mostrarPagamentoAprovado(p);
 
+  if (!p.chave) {
+    caixa.innerHTML = `<p class="aviso aviso-alerta"><strong>Não foi possível gerar o Pix.</strong>O pedido precisa ser registrado na loja antes do pagamento.</p>`;
+    return;
+  }
   let mp = p.pagamento.mercadoPago;
   if (!mp || novaTentativa) {
     caixa.innerHTML = `<p>Gerando o QR Code Pix…</p>`;
@@ -766,15 +842,11 @@ async function iniciarPagamentoMercadoPago(p, novaTentativa = false) {
       const resp = await fetch("api/pix", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          codigo: p.codigo,
-          tentativa,
-          cliente: { nome: p.cliente.nome, email: p.cliente.email },
-          itens: p.itens.map(i => ({ produtoId: i.produtoId, modeloId: i.modeloId, quantidade: i.quantidade })),
-        }),
+        body: JSON.stringify({ codigo: p.codigo, chave: p.chave, tentativa }),
       });
       const r = await resp.json().catch(() => ({}));
       if (!resp.ok) {
+        if (r.codigoErro === "ja_pago") { await sincronizarPedido(p); paginaPedido(); return; }
         const instrucao = r.codigoErro === "preco_indefinido" || r.codigoErro === "nao_configurado"
           ? "Envie o pedido pelo WhatsApp e a loja combina o pagamento com você."
           : "";
@@ -812,12 +884,12 @@ async function consultarStatusPix(p, mp, rodada) {
   const caixa = main.querySelector("[data-mp]");
   if (!caixa || lerUltimoPedido()?.codigo !== p.codigo) return; // saiu da página
   try {
-    const resp = await fetch(`api/pix/${encodeURIComponent(mp.id)}?ref=${encodeURIComponent(p.codigo)}`, { cache: "no-store" });
+    const resp = await fetch(`api/pix/${encodeURIComponent(mp.id)}?ref=${encodeURIComponent(p.codigo)}&chave=${encodeURIComponent(p.chave)}`, { cache: "no-store" });
     const r = await resp.json().catch(() => ({}));
     if (resp.ok && r.status === "approved") {
       const atual = lerUltimoPedido() || p;
-      // A aprovação veio do Mercado Pago, consultado pelo servidor da loja.
-      const status = podeMudarStatus(atual.status, "pagamento_confirmado", "provedor") ? "pagamento_confirmado" : atual.status;
+      // A aprovação veio do Mercado Pago, consultado pelo servidor da loja, que já marcou o pedido como pago.
+      const status = r.pedido?.status || (podeMudarStatus(atual.status, "pagamento_confirmado", "provedor") ? "pagamento_confirmado" : atual.status);
       const pago = { ...atual, status, pagamento: { ...atual.pagamento, confirmado: true, aprovadoEm: r.aprovadoEm, mercadoPago: { ...mp, status: r.status } } };
       gravarUltimoPedido(pago);
       paginaPedido();
@@ -836,7 +908,7 @@ async function consultarStatusPix(p, mp, rodada) {
 
 function mostrarPagamentoAprovado(p) {
   const caixa = main.querySelector("[data-mp]");
-  caixa.innerHTML = `<p class="aviso aviso-sucesso"><strong>Pagamento aprovado pelo Mercado Pago ✓</strong>Pix nº ${esc(p.pagamento.mercadoPago?.id || "")} · ${esc(brl(p.pagamento.mercadoPago?.valor))}. Agora envie o pedido para a loja.</p>`;
+  caixa.innerHTML = `<p class="aviso aviso-sucesso"><strong>Pagamento aprovado pelo Mercado Pago ✓</strong>Pix nº ${esc(p.pagamento.mercadoPago?.id || "")} · ${esc(brl(p.pagamento.mercadoPago?.valor))}. ${p.cliente.aceitaWhatsApp ? "A confirmação com o espelho do pedido chega no seu WhatsApp. " : ""}${p.itens.some(i => i.referenciaImagem) ? "Agora envie as imagens personalizadas para a loja." : ""}</p>`;
 }
 
 function baixar(blob, nome) {
@@ -855,8 +927,10 @@ function paginaPrivacidade() {
       <p>Nome, telefone, e-mail (opcional) e endereço de entrega, além das imagens que você enviar para personalizar os produtos. Pedimos apenas o necessário para produzir e entregar o pedido.</p>
       <h2>Onde ficam os dados</h2>
       <ul>
-        <li>As imagens são processadas no seu próprio navegador. Elas <strong>não são enviadas a nenhum servidor</strong> por este site.</li>
-        <li>O carrinho, as imagens personalizadas e o resumo do último pedido ficam guardados só neste aparelho, no armazenamento do navegador. Você pode apagá-los limpando os dados do site no navegador.</li>
+        <li>As imagens são processadas no seu próprio navegador. Elas <strong>não são enviadas a nenhum servidor</strong> por este site: você as envia para a loja pelo WhatsApp.</li>
+        <li>O carrinho, as imagens personalizadas e o resumo do último pedido ficam guardados neste aparelho, no armazenamento do navegador. Você pode apagá-los limpando os dados do site no navegador.</li>
+        <li>Ao confirmar o pedido, os dados do pedido (nome, telefone, e-mail, endereço, produtos e valores) são guardados no sistema da loja, hospedado na Cloudflare. Só a loja tem acesso, pelo painel protegido por senha.</li>
+        <li>Se você marcar a opção no checkout, a loja manda a confirmação do pagamento e o rastreio para o seu WhatsApp pela plataforma oficial do WhatsApp (Meta). Sem essa opção, nenhuma mensagem automática é enviada.</li>
         <li>No pagamento por Pix, seu nome, e-mail, o código e o valor do pedido são enviados ao Mercado Pago para gerar a cobrança. O Mercado Pago envia o comprovante para o seu e-mail.</li>
         <li>Quando você digita o CEP no checkout, só o número do CEP é consultado no serviço público ViaCEP para preencher o endereço.</li>
         <li>Os dados só chegam à loja quando você envia o pedido pelo canal indicado (por exemplo, WhatsApp). A partir daí, valem também as regras desse serviço.</li>
@@ -864,9 +938,9 @@ function paginaPrivacidade() {
       <h2>Para que usamos</h2>
       <p>Para produzir os produtos personalizados, combinar o pagamento e fazer a entrega. Não vendemos nem compartilhamos seus dados para publicidade, e não publicamos as fotos enviadas sem a sua autorização.</p>
       <h2>Seus direitos</h2>
-      <p>Você pode pedir para a loja corrigir ou apagar os dados que enviou, pelo mesmo canal usado no pedido.</p>
+      <p>Você pode pedir para a loja corrigir ou apagar os dados do seu pedido, pelo WhatsApp da loja.</p>
       <h2>Sobre a loja</h2>
-      <p>A Mats & Mouse Pads Empire é um projeto de empreendedorismo escolar, acompanhado por um adulto responsável. Este texto descreve o funcionamento atual do site e será revisado quando a loja passar a guardar pedidos em um servidor ou a usar um serviço de pagamento.</p>
+      <p>A Mats & Mouse Pads Empire é um projeto de empreendedorismo escolar, acompanhado por um adulto responsável. Este texto descreve o funcionamento atual do site e será revisado sempre que ele mudar.</p>
     </div>`;
 }
 

@@ -5,7 +5,11 @@
   "upload": {
     "_leia": "Limite de tamanho do arquivo enviado pelo cliente, em MB. Tipos aceitos: JPEG, PNG e WebP.",
     "tamanhoMaximoMB": 15,
-    "tiposAceitos": ["image/jpeg", "image/png", "image/webp"],
+    "tiposAceitos": [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ],
     "pixelsPorCmMinimo": 40
   },
   "entrega": {
@@ -26,6 +30,17 @@
   "pedidos": {
     "_leia": "Canal para onde o pedido é enviado. Sem número configurado, o site prepara o pedido mas não envia. Formato: DDI + DDD + número, só dígitos (ex.: 5541999999999).",
     "whatsapp": "5541996907357"
+  },
+  "notificacoes": {
+    "whatsapp": {
+      "_leia": "Mensagens automáticas pelo WhatsApp Cloud API (Meta). Os nomes abaixo são os modelos aprovados na Meta (ver README). O token e o ID do número ficam nos segredos WHATSAPP_TOKEN e WHATSAPP_PHONE_ID da Cloudflare, nunca aqui.",
+      "versaoApi": "v23.0",
+      "idioma": "pt_BR",
+      "modelos": {
+        "pago": "pedido_pago",
+        "enviado": "pedido_enviado"
+      }
+    }
   },
   "contato": {
     "email": null,

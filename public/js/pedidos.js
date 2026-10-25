@@ -1,42 +1,11 @@
 // Modelo de pedido e regras de status.
-// Este site não tem backend: o pedido é montado no navegador e enviado pelo canal
-// configurado (WhatsApp). Nada aqui confirma pagamento. A confirmação real só pode
-// vir de um backend que receba o aviso (webhook) do provedor de pagamento.
+// O pedido é montado no navegador e registrado no servidor da loja (src/worker.js),
+// que recalcula os preços. Nada aqui confirma pagamento: a confirmação vem do
+// servidor, depois de consultar o Mercado Pago, ou da conferência manual no painel.
 
 import { uid } from "./util.js";
 
-export const STATUS = {
-  aguardando_pagamento: "Aguardando pagamento",
-  pagamento_confirmado: "Pagamento confirmado",
-  em_producao: "Em produção",
-  pronto_para_envio: "Pronto para envio",
-  enviado: "Enviado",
-  entregue: "Entregue",
-  cancelado: "Cancelado",
-};
-
-// Transições permitidas entre status.
-const TRANSICOES = {
-  aguardando_pagamento: ["pagamento_confirmado", "cancelado"],
-  pagamento_confirmado: ["em_producao", "cancelado"],
-  em_producao: ["pronto_para_envio", "cancelado"],
-  pronto_para_envio: ["enviado", "cancelado"],
-  enviado: ["entregue"],
-  entregue: [],
-  cancelado: [],
-};
-
-/**
- * Diz se um pedido pode mudar de status.
- * "pagamento_confirmado" só é aceito quando a origem é o provedor de pagamento
- * (verificado no servidor) ou a conferência manual feita por um adulto responsável.
- * Um clique do cliente no navegador nunca é origem válida.
- */
-export function podeMudarStatus(atual, novo, origem) {
-  if (!TRANSICOES[atual]?.includes(novo)) return false;
-  if (novo === "pagamento_confirmado") return origem === "provedor" || origem === "conferencia_manual";
-  return origem !== "cliente";
-}
+export { STATUS, TRANSICOES, podeMudarStatus } from "./status.js";
 
 /** Gera um código curto e legível para o pedido, ex.: EMP-7K3Q9X. */
 export function codigoPedido() {
@@ -55,7 +24,7 @@ export function montarPedido({ itens, cliente, endereco, observacoes, totais, lo
     codigo: codigoPedido(),
     criadoEm: new Date().toISOString(),
     status: "aguardando_pagamento",
-    cliente: { nome: cliente.nome, telefone: cliente.telefone, email: cliente.email || null },
+    cliente: { nome: cliente.nome, telefone: cliente.telefone, email: cliente.email || null, aceitaWhatsApp: Boolean(cliente.aceitaWhatsApp) },
     endereco: { ...endereco },
     observacoes: observacoes || null,
     itens: itens.map(i => ({

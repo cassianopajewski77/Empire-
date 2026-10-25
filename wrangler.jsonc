@@ -1,16 +1,10 @@
-// Publicação na Cloudflare.
-// Os arquivos de public/ são servidos direto. Só as rotas /api/* passam pelo
-// servidor (src/worker.js), que cria e consulta os pagamentos Pix no Mercado Pago.
-// O token do Mercado Pago é um segredo (MP_ACCESS_TOKEN) cadastrado no painel da
-// Cloudflare em Settings → Variables and Secrets. Nunca coloque o token aqui.
 {
   "name": "empire",
   "main": "src/worker.js",
   "compatibility_date": "2025-09-01",
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
-  },
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  // Banco de pedidos: Durable Object com SQLite (plano gratuito). Não precisa criar nada no painel.
+  "durable_objects": { "bindings": [{ "name": "PEDIDOS", "class_name": "Pedidos" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Pedidos"] }],
   "observability": { "enabled": true }
 }

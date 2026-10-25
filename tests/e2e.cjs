@@ -1,5 +1,6 @@
 // Testes de ponta a ponta da loja (Playwright + servidor estático local).
 // Rodar: npm test   (requer o pacote "playwright" com o Chromium instalado)
+// O servidor (src/worker.js) roda aqui mesmo, com banco, Mercado Pago e WhatsApp simulados.
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -12,9 +13,11 @@ const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", "
 // Mercado Pago simulado: guarda os Pix criados e deixa o teste aprovar um deles.
 const mp = { pagamentos: new Map(), proximoId: 9000 };
 let precosTeste = null; // quando definido, o servidor e o navegador usam estes preços
+const whats = []; // mensagens enviadas ao WhatsApp Cloud API simulado
 const fetchReal = globalThis.fetch;
 globalThis.fetch = async (url, opcoes = {}) => {
   const u = String(url);
+  if (u.startsWith("https://graph.facebook.com/")) { whats.push(JSON.parse(opcoes.body)); return Response.json({ messages: [{ id: "wamid.teste" }] }); }
   if (!u.startsWith("https://api.mercadopago.com/")) return fetchReal(url, opcoes);
   if (opcoes.method === "POST") {
     const corpo = JSON.parse(opcoes.body);
@@ -32,11 +35,16 @@ function aplicarPrecos(catalogo) {
   return catalogo;
 }
 
+let env;
 async function rotaApi(req, res) {
   const worker = (await import("../src/worker.js")).default;
   const corpo = await new Promise(ok => { let d = ""; req.on("data", c => (d += c)); req.on("end", () => ok(d)); });
-  const env = {
+  env ||= {
     MP_ACCESS_TOKEN: "TEST-token",
+    ADMIN_SENHA: "senha-teste",
+    WHATSAPP_TOKEN: "wa-teste",
+    WHATSAPP_PHONE_ID: "999",
+    PEDIDOS: (await import("./suporte/ambiente.mjs")).bancoFalso(),
     ASSETS: {
       async fetch(r) {
         const caminho = new URL(r.url).pathname;
@@ -45,7 +53,7 @@ async function rotaApi(req, res) {
       },
     },
   };
-  const resp = await worker.fetch(new Request("http://loja.test" + req.url, { method: req.method, body: req.method === "POST" ? corpo : undefined }), env);
+  const resp = await worker.fetch(new Request("http://loja.test" + req.url, { method: req.method, headers: req.headers.authorization ? { Authorization: req.headers.authorization } : {}, body: req.method === "POST" ? corpo : undefined }), env);
   res.writeHead(resp.status, { "Content-Type": "application/json" });
   res.end(await resp.text());
 }
@@ -269,8 +277,9 @@ async function cenario(nome, fn) {
     await page.click("button:has-text('Revisar pedido')");
     assert.match(await page.textContent("#erro-cep"), /8 números/);
     await page.fill("#cep", "80000-000");
+    await page.check("input[name=aceitaWhatsApp]");
     await page.click("button:has-text('Revisar pedido')");
-    const errosForm = await page.$$eval(".campo .erro", els => els.map(e => e.textContent).filter(Boolean));
+    const errosForm = await page.$$eval(".campo .erro", els => els.map(e => e.id + ":" + e.textContent).filter(t => !t.endsWith(":")));
     assert.deepEqual(errosForm, []);
     await page.waitForURL(/checkout\/revisao/);
     assert.match(await page.textContent("main"), /Entrega a combinar/);
@@ -296,6 +305,10 @@ async function cenario(nome, fn) {
     assert.equal(pedido.status, "aguardando_pagamento");
     assert.equal(pedido.pagamento.confirmado, false);
     assert.equal(pedido.itens[0].personalizacao.arte.id, "abstrato");
+    // o pedido foi registrado no servidor da loja
+    assert.match(pedido.chave, /^[0-9a-f]{32}$/);
+    assert.equal(pedido.cliente.aceitaWhatsApp, true);
+    assert.equal((await env.PEDIDOS.instancia.obter(pedido.codigo)).status, "aguardando_pagamento");
     assert.equal((await itensCarrinho()).length, 0);
   });
 
@@ -377,6 +390,9 @@ async function cenario(nome, fn) {
     assert.equal(pedido.pagamento.mercadoPago.id, id);
     const link = await page.getAttribute("a:has-text('Enviar pedido pelo WhatsApp')", "href");
     assert.match(decodeURIComponent(link), /Mercado Pago nº \d+ · APROVADO/);
+    // cliente não marcou o aviso pelo WhatsApp: nenhuma mensagem automática
+    assert.equal(whats.length, 0);
+    assert.equal((await env.PEDIDOS.instancia.obter(pedido.codigo)).status, "pagamento_confirmado");
     } finally {
       await page.unroute("**/data/catalogo.json"); await page.unroute("**/data/loja.json");
       precosTeste = null;
@@ -384,26 +400,81 @@ async function cenario(nome, fn) {
   });
 
   await cenario("Pix pelo Mercado Pago sem preço definido manda combinar pelo WhatsApp", async () => {
-    const pedido = await page.evaluate(() => {
-      const p = JSON.parse(localStorage.getItem("empire-ultimo-pedido"));
-      p.codigo = "EMP-SEMPR2"; p.status = "aguardando_pagamento"; p.pagamento = { metodo: "pix", modo: "mercadopago", confirmado: false };
-      localStorage.setItem("empire-ultimo-pedido", JSON.stringify(p)); return p;
-    });
     precosTeste = { p: null, m: null, g: null };
     try {
+      const pedido = await page.evaluate(async () => {
+        const p = JSON.parse(localStorage.getItem("empire-ultimo-pedido"));
+        p.codigo = "EMP-SEMPR2"; p.status = "aguardando_pagamento"; p.pagamento = { metodo: "pix", modo: "mercadopago", confirmado: false };
+        const r = await fetch("api/pedidos", { method: "POST", body: JSON.stringify({ ...p, itens: p.itens.map(i => ({ produtoId: i.produtoId, modeloId: i.modeloId, quantidade: i.quantidade })) }) }).then(r => r.json());
+        p.chave = r.chave;
+        localStorage.setItem("empire-ultimo-pedido", JSON.stringify(p)); return p;
+      });
       await page.goto(base + "#/"); await page.reload();
       await irPara("#/pedido");
       await page.waitForFunction(() => /Não foi possível gerar o Pix/.test(document.querySelector("[data-mp]")?.textContent || ""), null, { timeout: 8000 })
         .catch(async e => { throw new Error(e.message + " | " + (await page.textContent("main")).replace(/\s+/g, " ").slice(0, 400)); });
       assert.match(await page.textContent("[data-mp]"), /preço/);
-      assert.ok(pedido);
+      assert.ok(pedido.chave);
     } finally {
       precosTeste = null;
     }
   });
 
+  await cenario("Painel da loja: senha, rastreio e aviso no WhatsApp", async () => {
+    // pedido pago de um cliente que aceitou os avisos
+    const codigo = "EMP-PAINE1";
+    const { chave } = await page.evaluate(async codigo => {
+      const corpo = { codigo, cliente: { nome: "Maria Souza", telefone: "(41) 98888-7777", email: "maria@example.com", aceitaWhatsApp: true },
+        endereco: { cep: "80010-000", estado: "PR", cidade: "Curitiba", bairro: "Centro", rua: "Rua XV", numero: "1" },
+        itens: [{ produtoId: "mousepad", modeloId: "p", quantidade: 1, personalizacaoTexto: "Arte da loja: Abstrato Empire", fonte: "arte" }] };
+      return fetch("api/pedidos", { method: "POST", body: JSON.stringify(corpo) }).then(r => r.json());
+    }, codigo);
+    assert.ok(chave);
+    await page.goto(base + "painel.html");
+    await page.fill("#senha", "errada");
+    await page.click("button:has-text('Entrar')");
+    await page.waitForFunction(() => /Senha incorreta/.test(document.querySelector("#erro-senha")?.textContent || ""));
+    await page.fill("#senha", "senha-teste");
+    await page.click("button:has-text('Entrar')");
+    await page.waitForSelector(`[data-pedido=${codigo}]`);
+    assert.match(await page.textContent(".painel-lista"), /Maria Souza/);
+    await page.click(`[data-pedido=${codigo}]`);
+    await page.waitForSelector("text=Confirmar pagamento (conferi o Pix)");
+    assert.equal(await page.$("[data-rastreio]"), null, "rastreio só depois do pagamento");
+    page.once("dialog", d => d.accept());
+    await page.click("text=Confirmar pagamento (conferi o Pix)");
+    await page.waitForSelector("[data-rastreio]");
+    assert.equal(whats.at(-1).template.name, "pedido_pago");
+    assert.equal(whats.at(-1).to, "5541988887777");
+    assert.match(await page.textContent("[data-mensagem=pago]"), /enviada automaticamente/);
+    await page.click("[data-rastreio] button");
+    assert.match(await page.textContent("[data-erro-rastreio]"), /Preencha a transportadora/);
+    await page.fill("#transportadora", "Correios");
+    await page.fill("#codigo", "AB123456789BR");
+    await page.click("[data-rastreio] button");
+    await page.waitForSelector("[data-mensagem=enviado]");
+    assert.match(await page.textContent(".painel-barra"), /Enviado/);
+    const enviado = whats.at(-1);
+    assert.equal(enviado.template.name, "pedido_enviado");
+    assert.deepEqual(enviado.template.components[0].parameters.map(p => p.text).slice(2, 4), ["Correios", "AB123456789BR"]);
+    const link = await page.getAttribute("[data-mensagem=enviado] a:has-text('Abrir no WhatsApp')", "href");
+    assert.match(decodeURIComponent(link), /^https:\/\/wa\.me\/5541988887777\?text=.*AB123456789BR/s);
+    // o cliente vê o rastreio na página do pedido
+    await page.goto(base + "#/");
+    await page.evaluate(([codigo, chave]) => {
+      const p = JSON.parse(localStorage.getItem("empire-ultimo-pedido"));
+      Object.assign(p, { codigo, chave, status: "aguardando_pagamento", rastreio: null, pagamento: { metodo: "pix", modo: "whatsapp", confirmado: false } });
+      localStorage.setItem("empire-ultimo-pedido", JSON.stringify(p));
+    }, [codigo, chave]);
+    await page.reload();
+    await irPara("#/pedido");
+    await page.waitForSelector("[data-rastreio]");
+    assert.match(await page.textContent("[data-rastreio]"), /AB123456789BR/);
+    assert.match(await page.textContent(".status-pedido"), /Enviado/);
+  });
+
   await cenario("Layout sem rolagem horizontal no celular", async () => {
-    for (const h of ["#/", "#/catalogo", "#/personalizar/mousepad/g", "#/carrinho", "#/privacidade"]) {
+    for (const h of ["#/", "#/catalogo", "#/personalizar/mousepad/g", "#/carrinho", "#/privacidade", "painel.html#EMP-PAINE1"]) {
       await irPara(h);
       const largura = await page.evaluate(() => document.documentElement.scrollWidth);
       assert.ok(largura <= 390, `${h} tem ${largura}px de largura`);
