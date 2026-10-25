@@ -237,6 +237,15 @@ test("painel exige a senha e bloqueia depois de muitas tentativas", async () => 
   assert.equal((await admin(env, "/pedidos")).status, 429);
 });
 
+test("painel aceita senha com acento e ignora espaços nas pontas", async () => {
+  const env = ambiente({ ADMIN_SENHA: " Coração2026 " });
+  const entrar = senha => chamar(env, "/api/admin/pedidos", { cabecalhos: { Authorization: `Bearer ${encodeURIComponent(senha)}` } });
+  assert.equal((await entrar("Coração2026")).status, 200);
+  // "ç" e "ã" escritos com letra + acento combinado (como alguns teclados fazem)
+  assert.equal((await entrar("Corac\u0327a\u0303o2026")).status, 200);
+  assert.equal((await entrar("coração2026")).status, 401);
+});
+
 test("painel lista pedidos, lança o rastreio e avisa o cliente", async () => {
   const env = ambiente();
   await criarPedidoPago(env);

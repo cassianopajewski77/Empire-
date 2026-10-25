@@ -319,8 +319,15 @@ function iguais(a, b) {
   return dif === 0;
 }
 
+// Espaços nas pontas e formas diferentes do mesmo acento não contam.
+const normalizarSenha = s => String(s).trim().normalize("NFC");
+
+function decodificarSenha(s) {
+  try { return decodeURIComponent(s); } catch { return s; }
+}
+
 async function resumoSenha(s) {
-  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalizarSenha(s)));
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -328,8 +335,8 @@ async function autenticar(request, env) {
   if (!env.ADMIN_SENHA || !env.PEDIDOS) return json({ erro: "O painel ainda não foi configurado. Cadastre o segredo ADMIN_SENHA na Cloudflare.", codigoErro: "nao_configurado" }, 503);
   const db = banco(env);
   if (await db.loginBloqueado()) return json({ erro: "Muitas tentativas com senha errada. Espere 15 minutos." }, 429);
-  const enviada = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  if (enviada && iguais(await resumoSenha(enviada), await resumoSenha(env.ADMIN_SENHA))) return null;
+  const enviada = decodificarSenha((request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, ""));
+  if (normalizarSenha(enviada) && iguais(await resumoSenha(enviada), await resumoSenha(env.ADMIN_SENHA))) return null;
   await db.registrarFalhaLogin();
   return json({ erro: "Senha incorreta." }, 401);
 }
