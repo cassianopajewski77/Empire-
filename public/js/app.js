@@ -85,24 +85,43 @@ function cartaoModelo(produto, modelo, rotaPersonalizar) {
 // ---------------------------------------------------------------- páginas
 function paginaInicio() {
   titulo("");
-  const artes = artesPublicadas(dados.catalogo);
   const produtos = produtosPublicados(dados.catalogo);
   const destaques = produtos.flatMap(p => p.modelos.slice(0, 2).map(m => cartaoModelo(p, m, `#/personalizar/${p.id}/${m.id}`)));
   main.innerHTML = `
-    <section class="banner secao-escura">
+    <section class="dobra" aria-labelledby="dobra-titulo">
       <div class="wrap">
-        <div>
-          <img class="logo-grande" src="assets/logo.jpg" alt="Mats & Mouse Pads Empire" width="1000" height="318">
+        <div class="dobra-topo">
           <p class="sobretitulo">Produtos personalizados</p>
-          <h1>Sua ideia. Sua imagem. <span class="destaque">Seu produto.</span></h1>
-          <p class="lead">Crie mousepads com a sua personalidade e personalize tapetes com a foto do seu melhor amigo.</p>
-          <div class="acoes">
-            <a class="btn btn-primario" href="#/mousepads">Ver mousepads</a>
-            <a class="btn btn-contorno" href="#/tapetes-pet">Ver tapetes pet</a>
-          </div>
+          <h1 id="dobra-titulo">Sua criatividade. <span class="destaque">Seus produtos.</span> Seu estilo.</h1>
+          <p class="lead">Personalize seu espaço com desk pads exclusivos e transforme a foto do seu melhor amigo em um tapete especial.</p>
         </div>
-        <div class="vitrine" aria-hidden="true">
-          ${artes.slice(0, 4).map(a => `<img src="${esc(a.imagem)}" alt="" width="450" height="300">`).join("")}
+        <div class="dobra-produtos">
+          <article class="dobra-produto">
+            <div class="cena cena-mesa">
+              <div class="deskpad">
+                <img src="assets/vitrine/desk-pad-ilustrativo.svg" alt="Desk pad gamer preto com linhas e formas geométricas em ciano sobre uma mesa" width="1800" height="800" fetchpriority="high">
+              </div>
+              <span class="selo-ilustrativo">Imagem ilustrativa</span>
+            </div>
+            <div class="dobra-texto">
+              <h2><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 7h10a5 5 0 0 1 4.9 6l-.8 4a2.6 2.6 0 0 1-4.6 1.1L15 16H9l-1.5 2.1A2.6 2.6 0 0 1 2.9 17l-.8-4A5 5 0 0 1 7 7Zm0 3v1.3H5.7v1.4H7V14h1.4v-1.3h1.3v-1.4H8.4V10Zm9.3.3a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Zm-2 2a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z"/></svg><span>Desk Pads <span class="destaque">Gamer</span></span></h2>
+              <p>Leve sua personalidade para o setup com artes exclusivas e personalização.</p>
+              <p class="medida">Destaque da coleção: 90 × 40 cm</p>
+              <a class="btn btn-primario" href="#/mousepads">Explorar Desk Pads <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+          <article class="dobra-produto">
+            <div class="cena cena-piso">
+              <img class="tapete" src="assets/vitrine/tapete-pet-ilustrativo.jpg" alt="Tapete pet retangular com a foto de um cachorro e um gato deitados juntos, sobre piso de madeira" width="674" height="330" fetchpriority="high">
+              <span class="selo-ilustrativo">Imagem ilustrativa</span>
+            </div>
+            <div class="dobra-texto">
+              <h2>${iconePet.replace("<svg ", '<svg class="icone" ')}<span>Tapetes Pet <span class="destaque">Personalizados</span></span></h2>
+              <p>Transforme a foto do seu cão ou gato em um tapete feito especialmente para você.</p>
+              <p class="medida">Tamanho: 40 × 60 cm</p>
+              <a class="btn btn-primario" href="#/tapetes-pet">Personalizar Tapete Pet <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
       </div>
     </section>

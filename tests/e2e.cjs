@@ -7,7 +7,7 @@ const assert = require("assert/strict");
 const { chromium } = require("playwright");
 
 const RAIZ = path.join(__dirname, "..", "public");
-const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".jpg": "image/jpeg", ".png": "image/png", ".webmanifest": "application/manifest+json" };
+const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".jpg": "image/jpeg", ".png": "image/png", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml" };
 
 function servidor() {
   return new Promise(ok => {
@@ -64,10 +64,21 @@ async function cenario(nome, fn) {
 
   await cenario("Página inicial mostra marca, chamadas e categorias", async () => {
     await irPara("#/");
-    assert.match(await page.textContent("h1"), /Sua ideia\. Sua imagem\. Seu produto\./);
-    assert.ok(await page.isVisible("text=Ver mousepads"));
-    assert.ok(await page.isVisible("text=Ver tapetes pet"));
+    assert.match(await page.textContent("h1"), /Sua criatividade\. Seus produtos\. Seu estilo\./);
     assert.equal(await page.locator(".topo img[alt='Mats & Mouse Pads Empire']").count(), 1);
+    // primeira dobra: dois produtos com imagens carregadas e botões que levam às páginas reais
+    await page.waitForFunction(() => [...document.querySelectorAll(".dobra img")].every(i => i.complete));
+    const imgs = await page.$$eval(".dobra img", els => els.map(i => i.naturalWidth > 0));
+    assert.deepEqual(imgs, [true, true]);
+    assert.ok(await page.isVisible(".dobra >> text=Desk Pads Gamer"));
+    assert.ok(await page.isVisible(".dobra >> text=Tapetes Pet Personalizados"));
+    await page.click("a:has-text('Explorar Desk Pads')");
+    await page.waitForURL(/#\/mousepads$/);
+    await page.waitForSelector("h1:has-text('Mousepad')");
+    await irPara("#/");
+    await page.click("a:has-text('Personalizar Tapete Pet')");
+    await page.waitForURL(/#\/tapetes-pet$/);
+    await page.waitForSelector("h1:has-text('Tapete')");
   });
 
   await cenario("1. Mousepad com arte pronta, sem enviar imagem", async () => {
