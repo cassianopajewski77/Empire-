@@ -8,9 +8,9 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 2. Decisões técnicas
 
-- **Continuar estático, sem framework e sem build.** É o mais simples e seguro para a Cloudflare Pages já configurada, e não exige instalar nada. O site virou uma aplicação de página única com rotas por `#/`.
-- **Catálogo e configuração em JSON (`data/`).** Produtos, preços, dimensões, artes, entrega e pagamento mudam editando um arquivo, sem mexer no código nem reconstruir páginas.
-- **Componente único de personalização** (`js/personalizador.js`), configurado por produto:
+- **Continuar estático, sem framework e sem build.** É o mais simples e seguro e não exige instalar nada. O projeto da Cloudflare foi criado como Worker, então o `wrangler.jsonc` publica a pasta `public/` só como arquivos estáticos, sem código de servidor. O site virou uma aplicação de página única com rotas por `#/`.
+- **Catálogo e configuração em JSON (`public/data/`).** Produtos, preços, dimensões, artes, entrega e pagamento mudam editando um arquivo, sem mexer no código nem reconstruir páginas.
+- **Componente único de personalização** (`public/js/personalizador.js`), configurado por produto:
   - Mousepad: `arte_ou_upload`. O envio de imagem é opcional e o cliente pode escolher uma arte pronta.
   - Tapete pet: `upload_obrigatorio`. A foto é obrigatória e não aparecem artes prontas.
 - **Prévia no formato real.** O desenho respeita a proporção de cada produto (P 22 × 18, M 30 × 25, G 90 × 40, pet 40 × 60 cm), com cantos arredondados e uma linha tracejada de margem de segurança (1 cm). A imagem sempre cobre o produto inteiro, e a área visível é o recorte. Ferramentas: tamanho (zoom), arrastar, pinça no celular, setas na tela e no teclado, restaurar, substituir e remover.
@@ -28,15 +28,15 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | --- | --- |
 | Preços | Todos `null`: aparece "Preço a definir" e o total fica "A definir". |
 | Pagamento Pix | Modo `demonstracao`: o site avisa que o pagamento não está configurado. Não gera QR Code nem mostra chave, e nunca marca pagamento como confirmado. |
-| Pix manual | Pronto para ligar em `data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
+| Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
 | Envio do pedido | Sem `pedidos.whatsapp` configurado, o site avisa que o pedido **não foi enviado** e oferece baixar o resumo e as imagens. Com o número, aparece o botão "Enviar pedido pelo WhatsApp". |
-| Frete e prazo | "Entrega a combinar." até configurar `entrega` em `data/loja.json`. |
+| Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |
 | Modelos Clássico e Divertido | Sem descrição, imagem de referência e preço: o site mostra "Descrição em breve" e "Imagem de referência em breve". Cada modelo tem `previa.moldura` para receber uma imagem de moldura que aparece na prévia. |
 | Estoque | Não há controle de quantidade. Existe só o campo `disponibilidade` (`sob_encomenda`, `pronta_entrega`, `indisponivel`). |
 
 ## 4. Status de pedido
 
-`js/pedidos.js` define os status (Aguardando pagamento, Pagamento confirmado, Em produção, Pronto para envio, Enviado, Entregue, Cancelado), as transições permitidas e a regra de que "Pagamento confirmado" só vale quando vem do provedor de pagamento ou de uma conferência manual. Um clique do cliente nunca confirma. Como não há backend, o site só cria pedidos em "Aguardando pagamento".
+`public/js/pedidos.js` define os status (Aguardando pagamento, Pagamento confirmado, Em produção, Pronto para envio, Enviado, Entregue, Cancelado), as transições permitidas e a regra de que "Pagamento confirmado" só vale quando vem do provedor de pagamento ou de uma conferência manual. Um clique do cliente nunca confirma. Como não há backend, o site só cria pedidos em "Aguardando pagamento".
 
 ## 5. Privacidade e segurança
 
@@ -53,7 +53,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 ## 7. O que é preciso para vender de verdade
 
-1. Definir os preços (`data/catalogo.json`) e o número do WhatsApp (`data/loja.json`).
+1. Definir os preços (`public/data/catalogo.json`) e o número do WhatsApp (`public/data/loja.json`).
 2. Decidir o pagamento: Pix manual (mais simples) ou um provedor com Pix. A conta e o contrato precisam estar no nome de um adulto responsável, porque o Murilo é menor de idade.
 3. Para pedidos guardados com segurança: um backend (por exemplo, Cloudflare Pages Functions) com banco de dados (D1) e armazenamento privado das imagens (R2), um painel protegido por senha para a loja, e o webhook autenticado do provedor de pagamento para confirmar o Pix no servidor.
 4. Cadastrar descrição, preço e imagem de referência dos Modelos Clássico e Divertido.

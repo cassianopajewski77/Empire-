@@ -4,6 +4,6 @@
   "description": "Loja Mats & Mouse Pads Empire (site estático, sem etapa de build).",
   "scripts": {
     "test": "node tests/e2e.cjs",
-    "start": "python3 -m http.server 8080"
+    "start": "python3 -m http.server 8080 --directory public"
   }
 }

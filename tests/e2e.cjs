@@ -6,7 +6,7 @@ const path = require("path");
 const assert = require("assert/strict");
 const { chromium } = require("playwright");
 
-const RAIZ = path.join(__dirname, "..");
+const RAIZ = path.join(__dirname, "..", "public");
 const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".jpg": "image/jpeg", ".png": "image/png", ".webmanifest": "application/manifest+json" };
 
 function servidor() {
