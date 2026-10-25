@@ -22,6 +22,8 @@ export class Personalizador {
    * @param {object} opcoes.upload { tamanhoMaximoMB, tiposAceitos, pixelsPorCmMinimo }
    * @param {string} [opcoes.legenda] texto mostrado sob a prévia (ex.: nome do modelo)
    * @param {Function} [opcoes.aoMudar]
+   * @param {string} [opcoes.arteInicial] id da arte já escolhida (vinda da galeria)
+   * @param {string} [opcoes.fonteInicial] "arte" ou "upload"
    */
   constructor(opcoes) {
     this.o = opcoes;
@@ -35,6 +37,19 @@ export class Personalizador {
     this.erro = "";
     this.urlTemp = null;
     this.montar();
+    this.aplicarEscolhaInicial();
+  }
+
+  /** Abre já com a arte escolhida na galeria (ou com o envio de imagem aberto). */
+  aplicarEscolhaInicial() {
+    const { arteInicial, fonteInicial, regras } = this.o;
+    if (!regras.permiteArtes) return;
+    const radioArte = arteInicial && [...this.o.controles.querySelectorAll("input[name=arte]")].find(r => r.value === arteInicial);
+    const fonte = radioArte ? "arte" : fonteInicial === "upload" ? "upload" : null;
+    if (!fonte) return;
+    this.o.controles.querySelector(`input[name=fonte][value=${fonte}]`).checked = true;
+    if (radioArte) radioArte.checked = true;
+    this.trocarFonte(fonte);
   }
 
   get dims() { return this.o.dimensoes; }
@@ -67,7 +82,8 @@ export class Personalizador {
         <legend>Escolha uma arte</legend>
         ${artes.length ? `<div class="opcoes">${artes.map(a => `
           <label class="opcao opcao-arte"><input type="radio" name="arte" value="${esc(a.id)}">
-            <img src="${esc(a.imagem)}" alt="" loading="lazy" width="300" height="200"><span>${esc(a.nome)}</span></label>`).join("")}</div>`
+            <img src="${esc(a.miniatura || a.imagem)}" alt="" loading="lazy" width="300" height="200"><span>${esc(a.nome)}${a.provisoria ? `<small class="tag-provisoria">Provisória</small>` : ""}</span></label>`).join("")}</div>
+        ${artes.some(a => a.provisoria) ? `<p class="dica-artes">Artes marcadas como provisórias são imagens de demonstração. A arte final pode ter pequenas diferenças.</p>` : ""}`
           : `<p class="aviso">Nenhuma arte cadastrada no momento. Envie a sua imagem.</p>`}
       </fieldset>` : "";
 

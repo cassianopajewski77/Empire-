@@ -61,10 +61,33 @@ A Meta cobra por mensagem de modelo enviada. Só recebe mensagem o cliente que m
 | --- | --- |
 | `public/data/catalogo.json` | Produtos, modelos, preços, dimensões, disponibilidade, artes prontas. `preco: null` aparece como "Preço a definir". `publicado: false` esconde o item. |
 | `public/data/loja.json` | Limite de upload, entrega/frete, modo de pagamento (`mercadopago`, `whatsapp`…), WhatsApp que recebe os pedidos. |
-| `public/assets/artes/` | Imagens das artes prontas dos mousepads (cadastre em `catalogo.json > artes`). |
+| `public/assets/artes/` | Imagens das artes prontas e dos times (cadastre em `catalogo.json > artes` e `times`). |
 | `public/css/estilos.css` | Cores oficiais em `:root` (`--color-primary`, `--color-black`, `--color-white`, `--color-gray-light`). |
 
 Os JSON são públicos. Nunca coloque senhas, tokens ou chaves secretas neles.
+
+### Trocar uma arte da galeria
+
+A galeria "Escolher arte da loja" (`#/artes`) lê `catalogo.json > artes`. Cada arte tem `id`, `nome`, `colecao`, `descricao`, `imagem`, `miniatura`, `provisoria`, `modelos` e `publicado`.
+
+1. Coloque a arte final em `public/assets/artes/` (JPG; para o Extended 90 × 40 cm, de preferência 4500 × 2000 px) e uma miniatura em `public/assets/artes/miniaturas/` (720 × 320 px).
+2. Aponte `imagem` e `miniatura` para os arquivos novos.
+3. Mude `provisoria` para `false`. O selo "Arte provisória" some.
+4. Em `modelos`, deixe só os tamanhos em que a arte é vendida (`p` Compacto, `m` Standard, `g` Extended). `publicado: false` esconde a arte.
+
+Para criar uma arte nova, copie um item da lista e troque o `id` (sem espaços nem acentos). As coleções (filtros) ficam em `catalogo.json > colecoes`.
+
+### Cadastrar um time de futebol
+
+A página "Mousepads de times de futebol" (`#/times`) lê `catalogo.json > times`. Escudos, nomes estilizados e uniformes são marcas dos clubes. Enquanto `licenciado` for `false`, o site mostra a arte genérica (sem escudo) com o nome do clube em texto, o selo "Arte provisória · sem escudo" e o botão "Avise-me pelo WhatsApp". O time não pode ser comprado.
+
+Quando a loja tiver a arte oficial **e** a autorização do clube:
+
+1. Coloque a arte em `public/assets/artes/` e a miniatura em `public/assets/artes/miniaturas/`.
+2. Preencha `imagem`, `miniatura` e `licenca` (referência do contrato ou da autorização).
+3. Mude `licenciado` para `true`. O time passa a ter "Escolher este time" e vai para o personalizador com os tamanhos de `modelos`.
+
+Para incluir outro clube, copie um item e troque `id`, `nome` e `estado`. `observacaoInterna` não aparece no site. Não use imagens baixadas da internet.
 
 ## Estrutura
 

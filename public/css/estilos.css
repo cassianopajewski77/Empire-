@@ -263,3 +263,22 @@ main { flex: 1; }
 /* Consentimento para avisos no WhatsApp (checkout) */
 .consentimento { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0 4px; font-size: .95rem; cursor: pointer; }
 .consentimento input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: #000; }
+
+/* Galeria de artes da loja e mousepads de times */
+.acoes-linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.filtros { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; }
+.filtros input[type=search], .filtros select { min-height: 44px; padding: 0 12px; border: 1px solid #9CA3AF; border-radius: var(--radius-sm); font: inherit; background: var(--color-white); flex: 1 1 220px; max-width: 360px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 40px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--color-black); background: var(--color-white); color: var(--color-black); font: inherit; font-weight: 600; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--color-black); color: var(--color-primary); }
+.contagem { color: var(--color-muted); font-size: .9rem; margin: 4px 0 12px; }
+.grade-artes { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.cartao-arte .midia { aspect-ratio: 9 / 4; position: relative; background: #000; }
+.cartao-arte h2 { font-size: 1.15rem; margin: 0; }
+.cartao-arte .colecao { text-transform: uppercase; letter-spacing: .08em; font-size: .75rem !important; font-weight: 700; }
+.cartao-arte .tamanhos { font-size: .85rem !important; }
+.selo-provisoria { position: absolute; left: 8px; top: 8px; background: rgba(0,0,0,.78); color: var(--color-white); font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+.cartao-time .nome-sobre { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 20px); padding: 4px 12px; border-radius: 999px; background: rgba(0,0,0,.78); text-align: center; color: var(--color-white); font-weight: 800; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cartao-arte .btn { text-align: center; justify-content: center; }
+.tag-provisoria { display: block; font-size: .7rem; font-weight: 600; color: var(--color-muted); }
+.dica-artes { font-size: .85rem; color: var(--color-muted); margin: 8px 0 0; }

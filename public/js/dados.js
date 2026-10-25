@@ -27,8 +27,37 @@ export function acharModelo(produto, modeloId) {
   return produto?.modelos.find(m => m.id === modeloId);
 }
 
-export function artesPublicadas(catalogo) {
-  return (catalogo.artes || []).filter(a => a.publicado !== false);
+const ofereceModelo = (item, modeloId) => !modeloId || !Array.isArray(item.modelos) || item.modelos.includes(modeloId);
+
+/** Times publicados. Só os licenciados (com arte oficial) podem ser comprados. */
+export function timesPublicados(catalogo) {
+  const provisoria = catalogo.timesArteProvisoria || {};
+  return (catalogo.times || []).filter(t => t.publicado !== false).map(t => {
+    const oficial = t.licenciado === true && Boolean(t.imagem);
+    return {
+      ...t,
+      oficial,
+      imagem: oficial ? t.imagem : provisoria.imagem,
+      miniatura: oficial ? t.miniatura || t.imagem : provisoria.miniatura || provisoria.imagem,
+    };
+  });
+}
+
+/**
+ * Artes que o cliente pode escolher no personalizador. Com modeloId, só as
+ * oferecidas naquele tamanho. Times licenciados entram como artes da coleção "Times".
+ */
+export function artesPublicadas(catalogo, modeloId) {
+  const artes = (catalogo.artes || []).filter(a => a.publicado !== false && ofereceModelo(a, modeloId));
+  const times = timesPublicados(catalogo)
+    .filter(t => t.oficial && ofereceModelo(t, modeloId))
+    .map(t => ({ id: `time-${t.id}`, nome: t.nome, colecao: "times", imagem: t.imagem, miniatura: t.miniatura, provisoria: false }));
+  return [...artes, ...times];
+}
+
+export function nomeColecao(catalogo, id) {
+  if (id === "times") return "Times";
+  return (catalogo.colecoes || []).find(c => c.id === id)?.nome || "";
 }
 
 /** O cliente só pode comprar modelos que não estão indisponíveis. */
