@@ -225,7 +225,8 @@ async function cenario(nome, fn) {
     assert.deepEqual(errosForm, []);
     await page.waitForURL(/checkout\/revisao/);
     assert.match(await page.textContent("main"), /Entrega a combinar/);
-    assert.match(await page.textContent("main"), /Pagamento ainda não configurado/);
+    assert.match(await page.textContent("main"), /Pix combinado pelo WhatsApp|Pagamento ainda não configurado/);
+    assert.doesNotMatch(await page.textContent("main"), /Chave:/);
     // voltar e corrigir mantém os dados
     await page.click("text=Corrigir dados");
     assert.equal(await page.inputValue("#nome"), "Cliente de Teste");

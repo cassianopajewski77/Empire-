@@ -27,7 +27,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 | Item | Situação no site |
 | --- | --- |
 | Preços | Todos `null`: aparece "Preço a definir" e o total fica "A definir". |
-| Pagamento Pix | Modo `demonstracao`: o site avisa que o pagamento não está configurado. Não gera QR Code nem mostra chave, e nunca marca pagamento como confirmado. |
+| Pagamento Pix | Modo `whatsapp` (escolha do Cassiano): o site não mostra chave nem QR Code e explica que a chave Pix e o valor são enviados na conversa do pedido. Nunca marca pagamento como confirmado. O modo `demonstracao` continua disponível. Se um dia o site mostrar uma chave, use uma chave aleatória, nunca o CPF do Murilo. |
 | Pix manual | Pronto para ligar em `public/data/loja.json` (`modo: "manual"` + chave e titular). Mesmo assim, o pedido continua "Aguardando pagamento" até a loja conferir. |
 | Envio do pedido | WhatsApp configurado: (41) 99690-7357. Depois de confirmar, o cliente toca em "Enviar pedido pelo WhatsApp" e anexa as imagens baixadas. Sem número, o site avisaria que o pedido **não foi enviado**. |
 | Frete e prazo | "Entrega a combinar." até configurar `entrega` em `public/data/loja.json`. |

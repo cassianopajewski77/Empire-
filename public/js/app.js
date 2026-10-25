@@ -322,12 +322,14 @@ async function paginaPersonalizar(produtoId, modeloId) {
 function textoPagamentoCurto() {
   const modo = dados.loja.pagamento?.modo;
   if (modo === "manual" && dados.loja.pagamento.pixManual?.chave) return "Pix manual: a loja confere o recebimento antes de confirmar o pedido.";
+  if (modo === "whatsapp") return "Pix combinado pelo WhatsApp: depois do pedido, a loja envia a chave Pix e o valor na conversa e confere o recebimento.";
   return "O pagamento por Pix ainda está sendo configurado pela loja. Por enquanto, o pagamento é combinado depois do pedido.";
 }
 
 function avisoPagamento() {
   const modo = dados.loja.pagamento?.modo;
   if (modo === "manual" && dados.loja.pagamento.pixManual?.chave) return "";
+  if (modo === "whatsapp") return `<p class="aviso aviso-info"><strong>Pix combinado pelo WhatsApp</strong>Este site não cobra nada. Depois que você enviar o pedido, a loja manda a chave Pix e o valor na conversa.</p>`;
   return `<p class="aviso aviso-demo"><strong>Pagamento ainda não configurado</strong>A loja está em modo de demonstração: nenhum Pix é gerado e nenhum valor é cobrado por este site.</p>`;
 }
 
@@ -599,7 +601,7 @@ function textoPedido(p) {
   L.push(`Subtotal: ${brl(p.valores.subtotal, "a definir")}`);
   L.push(`Entrega: ${p.valores.frete != null ? brl(p.valores.frete) : p.valores.entregaMensagem}`);
   L.push(`*Total: ${brl(p.valores.total, "a definir")}*`);
-  L.push(`Pagamento: Pix (${p.pagamento.modo === "manual" ? "manual" : "a combinar"})`);
+  L.push(`Pagamento: Pix (${{ manual: "manual", whatsapp: "combinar a chave por aqui" }[p.pagamento.modo] || "a combinar"})`);
   L.push("");
   L.push(`Cliente: ${p.cliente.nome}`);
   L.push(`Telefone: ${p.cliente.telefone}${p.cliente.email ? " · " + p.cliente.email : ""}`);
@@ -648,7 +650,9 @@ function paginaPedido() {
             <p class="aviso aviso-info"><strong>Pix manual</strong>Chave: <span style="font-family:monospace">${esc(loja.pagamento.pixManual.chave)}</span>${loja.pagamento.pixManual.titular ? `<br>Titular: ${esc(loja.pagamento.pixManual.titular)}` : ""}<br>
             ${p.valores.total != null ? `Valor: <strong>${brl(p.valores.total)}</strong>` : "O valor será confirmado pela loja antes do pagamento."}<br>
             A loja confere o recebimento e só então muda o status do pedido.</p>`
-          : `<p class="aviso aviso-demo"><strong>Pagamento ainda não configurado</strong>Este é um modo de demonstração. Nenhum Pix foi gerado e nenhum valor foi cobrado. A loja vai combinar o pagamento com você.</p>`}
+          : loja.pagamento?.modo === "whatsapp"
+            ? `<p class="aviso aviso-info"><strong>Pix combinado pelo WhatsApp</strong>Depois de enviar o pedido, a loja manda a chave Pix e o valor na conversa. O pedido só sai de "Aguardando pagamento" quando a loja conferir o recebimento.</p>`
+            : `<p class="aviso aviso-demo"><strong>Pagamento ainda não configurado</strong>Este é um modo de demonstração. Nenhum Pix foi gerado e nenhum valor foi cobrado. A loja vai combinar o pagamento com você.</p>`}
         </section>
       </div>
       <h2>Resumo</h2>

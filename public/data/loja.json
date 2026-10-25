@@ -16,8 +16,8 @@
     "prazo": null
   },
   "pagamento": {
-    "_leia": "Modos: 'demonstracao' (nenhum pagamento real, padrão), 'manual' (Pix manual conferido por um adulto responsável; preencha pixManual) ou 'provedor' (exige backend e webhook do provedor; ainda não implementado).",
-    "modo": "demonstracao",
+    "_leia": "Modos: 'whatsapp' (Pix combinado na conversa do pedido; o site não mostra chave), 'demonstracao' (nenhum pagamento real), 'manual' (Pix manual conferido por um adulto responsável; preencha pixManual) ou 'provedor' (exige backend e webhook do provedor; ainda não implementado).",
+    "modo": "whatsapp",
     "pixManual": {
       "chave": null,
       "titular": null
