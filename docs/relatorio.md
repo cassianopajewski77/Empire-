@@ -83,7 +83,7 @@ O repositório tinha uma única página (`index.html`) feita para a feira da esc
 
 `npm test` roda 15 testes do servidor (`tests/worker.test.mjs`) e 20 cenários no Chromium em tela de celular:
 
-1. Página inicial com a primeira dobra (desk pad e tapete pet) e os botões.
+1. Página inicial com a primeira dobra em fundo branco (desk pad do Flamengo e comedouro) e os botões.
 2. Mousepad com arte pronta, sem enviar imagem.
 3. Mousepad com imagem própria, zoom, setas e arrastar.
 4. Tapete pet sem foto: o site bloqueia e mostra a mensagem.

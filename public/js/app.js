@@ -100,13 +100,13 @@ function paginaInicio() {
         <div class="dobra-topo">
           <p class="sobretitulo">Produtos personalizados</p>
           <h1 id="dobra-titulo">Sua criatividade. <span class="destaque">Seus produtos.</span> Seu estilo.</h1>
-          <p class="lead">Personalize seu espaço com desk pads exclusivos e transforme a foto do seu melhor amigo em um tapete especial.</p>
+          <p class="lead">Personalize seu espaço com desk pads exclusivos e crie um cantinho especial para a refeição do seu pet.</p>
         </div>
         <div class="dobra-produtos">
           <article class="dobra-produto">
             <div class="cena cena-mesa">
               <div class="deskpad">
-                <img src="assets/vitrine/desk-pad-ilustrativo.svg" alt="Desk pad gamer preto com linhas e formas geométricas em ciano sobre uma mesa" width="1800" height="800" fetchpriority="high">
+                <img src="assets/artes/times/flamengo.jpg" alt="Desk pad do Flamengo, com o escudo do clube sobre fundo vermelho e preto" width="1170" height="480" fetchpriority="high">
               </div>
               <span class="selo-ilustrativo">Imagem ilustrativa</span>
             </div>
@@ -119,14 +119,14 @@ function paginaInicio() {
           </article>
           <article class="dobra-produto">
             <div class="cena cena-piso">
-              <img class="tapete" src="assets/vitrine/tapete-pet-ilustrativo.jpg" alt="Tapete pet retangular com a foto de um cachorro e um gato deitados juntos, sobre piso de madeira" width="674" height="330" fetchpriority="high">
+              <img class="tapete" src="assets/pet/comedouro-vitrine.jpg" alt="Tapete de comedouro cinza com patinhas, dois potes de inox em cima e o nome Miles na faixa preta" width="736" height="414" fetchpriority="high">
               <span class="selo-ilustrativo">Imagem ilustrativa</span>
             </div>
             <div class="dobra-texto">
-              <h2>${iconePet.replace("<svg ", '<svg class="icone" ')}<span>Tapetes Pet <span class="destaque">Personalizados</span></span></h2>
-              <p>Transforme a foto do seu cão ou gato em um tapete feito especialmente para você.</p>
-              <p class="medida">Tamanho: 40 × 60 cm</p>
-              <a class="btn btn-primario" href="#/tapetes-pet">Personalizar Tapete Pet <span aria-hidden="true">→</span></a>
+              <h2>${iconePet.replace("<svg ", '<svg class="icone" ')}<span>Comedouros <span class="destaque">Personalizados</span></span></h2>
+              <p>Um cantinho especial para a hora da refeição, com o nome do seu pet e as cores que você escolher.</p>
+              <p class="medida">Tamanho: 40 × 60 cm · potes não inclusos</p>
+              <a class="btn btn-primario" href="#/comedouros">Explorar Comedouros <span aria-hidden="true">→</span></a>
             </div>
           </article>
         </div>

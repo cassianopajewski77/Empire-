@@ -127,14 +127,14 @@ async function cenario(nome, fn) {
     const imgs = await page.$$eval(".dobra img", els => els.map(i => i.naturalWidth > 0));
     assert.deepEqual(imgs, [true, true]);
     assert.ok(await page.isVisible(".dobra >> text=Desk Pads Gamer"));
-    assert.ok(await page.isVisible(".dobra >> text=Tapetes Pet Personalizados"));
+    assert.ok(await page.isVisible(".dobra >> text=Comedouros Personalizados"));
     await page.click("a:has-text('Explorar Desk Pads')");
     await page.waitForURL(/#\/mousepads$/);
     await page.waitForSelector("h1:has-text('Mousepad')");
     await irPara("#/");
-    await page.click("a:has-text('Personalizar Tapete Pet')");
-    await page.waitForURL(/#\/tapetes-pet$/);
-    await page.waitForSelector("h1:has-text('Tapete')");
+    await page.click("a:has-text('Explorar Comedouros')");
+    await page.waitForURL(/#\/comedouros$/);
+    await page.waitForSelector("h1:has-text('Comedouros')");
   });
 
   await cenario("1. Mousepad com arte pronta, sem enviar imagem", async () => {
