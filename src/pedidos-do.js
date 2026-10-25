@@ -22,6 +22,13 @@ export class Pedidos extends DurableObject {
       );
       CREATE INDEX IF NOT EXISTS pedidos_criado ON pedidos (criado_em);
       CREATE TABLE IF NOT EXISTS falhas_login (em INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS previas (
+        codigo TEXT NOT NULL,
+        item INTEGER NOT NULL,
+        tipo TEXT NOT NULL,
+        dados TEXT NOT NULL,
+        PRIMARY KEY (codigo, item)
+      );
     `);
   }
 
@@ -111,6 +118,28 @@ export class Pedidos extends DurableObject {
     if (!p) return null;
     (p.notificacoes ||= []).push({ ...notificacao, em: new Date().toISOString() });
     return this.#gravar(p);
+  }
+
+  /**
+   * Guarda a prévia (imagem em base64) de um item do pedido. Só enquanto o
+   * pedido aguarda pagamento: depois disso a loja já está trabalhando nele.
+   */
+  salvarPrevia(codigo, item, tipo, base64) {
+    const p = this.#ler(codigo);
+    if (!p) return { erro: "nao_encontrado" };
+    if (!p.itens[item]) return { erro: "item_invalido" };
+    if (p.status !== "aguardando_pagamento" && p.itens[item].previa) return { erro: "status_invalido" };
+    this.sql.exec("INSERT OR REPLACE INTO previas (codigo, item, tipo, dados) VALUES (?, ?, ?, ?)", codigo, item, tipo, base64);
+    if (!p.itens[item].previa) {
+      p.itens[item].previa = true;
+      this.#historico(p, `Prévia do item ${item + 1} recebida.`);
+      this.#gravar(p);
+    }
+    return { ok: true };
+  }
+
+  lerPrevia(codigo, item) {
+    return this.sql.exec("SELECT tipo, dados FROM previas WHERE codigo = ? AND item = ?", codigo, item).toArray()[0] || null;
   }
 
   /** Limita tentativas de senha do painel: no máximo 10 erros a cada 15 minutos. */

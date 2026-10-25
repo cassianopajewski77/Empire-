@@ -2,6 +2,8 @@
 // Serve os arquivos de public/ e expõe a API:
 //   POST /api/pedidos                  registra o pedido (preços recalculados aqui)
 //   GET  /api/pedidos/:codigo?chave=…  status e rastreio do pedido, para o cliente
+//   POST /api/pedidos/:codigo/previas/:n         prévia da personalização do item n
+//   GET  /api/pedidos/:codigo/previas/:n?chave=… a mesma prévia (link para a loja e o cliente)
 //   POST /api/pix                      cria a cobrança Pix do pedido no Mercado Pago
 //   GET  /api/pix/:id?ref=…&chave=…    consulta o pagamento no Mercado Pago
 //   POST /api/mercadopago/webhook      aviso do Mercado Pago quando um pagamento muda
@@ -29,6 +31,9 @@ export default {
       if (rota === "/api/pedidos" && metodo === "POST") return await criarPedido(request, env);
       let m = rota.match(/^\/api\/pedidos\/(EMP-[A-Z0-9]{6})$/);
       if (m && metodo === "GET") return await statusPublico(env, m[1], url.searchParams.get("chave"));
+      m = rota.match(/^\/api\/pedidos\/(EMP-[A-Z0-9]{6})\/previas\/(\d{1,2})$/);
+      if (m && metodo === "POST") return await receberPrevia(request, env, m[1], Number(m[2]));
+      if (m && metodo === "GET") return await mostrarPrevia(env, m[1], Number(m[2]), url.searchParams.get("chave"));
       if (rota === "/api/pix" && metodo === "POST") return await criarPix(request, env);
       m = rota.match(/^\/api\/pix\/(\d{1,20})$/);
       if (m && metodo === "GET") return await consultarPix(request, env, m[1], url.searchParams.get("ref"), url.searchParams.get("chave"));
@@ -168,6 +173,54 @@ async function pedidoDoCliente(env, codigo, chave) {
 async function statusPublico(env, codigo, chave) {
   const p = await pedidoDoCliente(env, codigo, chave);
   return p ? json(visaoCliente(p)) : json({ erro: "Pedido não encontrado." }, 404);
+}
+
+// ---------------------------------------------------------------- prévias das personalizações
+
+const PREVIA_MAX_BYTES = 1_200_000;
+const PREVIA_TIPOS = { "image/jpeg": [0xff, 0xd8, 0xff], "image/png": [0x89, 0x50, 0x4e, 0x47] };
+
+/** Confere uma imagem enviada como data URL. Devolve { tipo, base64 } ou null. */
+export function validarPrevia(dataUrl) {
+  const m = /^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl || ""));
+  if (!m) return null;
+  const [, tipo, base64] = m;
+  if (base64.length > Math.ceil(PREVIA_MAX_BYTES / 3) * 4) return null;
+  let bytes;
+  try { bytes = Uint8Array.from(atob(base64.slice(0, 16)), c => c.charCodeAt(0)); } catch { return null; }
+  if (!PREVIA_TIPOS[tipo].every((b, i) => bytes[i] === b)) return null;
+  return { tipo, base64 };
+}
+
+async function receberPrevia(request, env, codigo, item) {
+  let corpo;
+  try { corpo = await request.json(); } catch { return json({ erro: "Prévia inválida." }, 400); }
+  const p = await pedidoDoCliente(env, codigo, corpo?.chave);
+  if (!p) return json({ erro: "Pedido não encontrado." }, 404);
+  const img = validarPrevia(corpo.imagem);
+  if (!img) return json({ erro: "A prévia precisa ser uma imagem JPEG ou PNG de até 1,2 MB." }, 400);
+  const r = await banco(env).salvarPrevia(codigo, item, img.tipo, img.base64);
+  if (r.erro === "item_invalido") return json({ erro: "Item do pedido não encontrado." }, 404);
+  if (r.erro) return json({ erro: "Este pedido não aceita mais prévias." }, 409);
+  return json({ ok: true }, 201);
+}
+
+function respostaImagem(previa, nome) {
+  const bytes = Uint8Array.from(atob(previa.dados), c => c.charCodeAt(0));
+  return new Response(bytes, {
+    headers: {
+      "Content-Type": previa.tipo,
+      "Content-Disposition": `inline; filename="${nome}.${previa.tipo === "image/png" ? "png" : "jpg"}"`,
+      "Cache-Control": "private, max-age=3600",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
+async function mostrarPrevia(env, codigo, item, chave) {
+  const p = await pedidoDoCliente(env, codigo, chave);
+  const previa = p && (await banco(env).lerPrevia(codigo, item));
+  return previa ? respostaImagem(previa, `${codigo}-item${item + 1}`) : json({ erro: "Prévia não encontrada." }, 404);
 }
 
 // ---------------------------------------------------------------- Pix pelo Mercado Pago
@@ -380,6 +433,11 @@ async function rotaAdmin(request, env, url) {
       codigo: p.codigo, criadoEm: p.criadoEm, status: p.status, statusNome: STATUS[p.status] || p.status,
       nome: p.cliente.nome, total: p.valores.total, pago: Boolean(p.pagamento?.confirmado), rastreio: p.rastreio?.codigo || null,
     })));
+  }
+  const mp = rota.match(/^\/pedidos\/(EMP-[A-Z0-9]{6})\/previas\/(\d{1,2})$/);
+  if (mp && metodo === "GET") {
+    const previa = await db.lerPrevia(mp[1], Number(mp[2]));
+    return previa ? respostaImagem(previa, `${mp[1]}-item${Number(mp[2]) + 1}`) : json({ erro: "Prévia não encontrada." }, 404);
   }
   const m = rota.match(/^\/pedidos\/(EMP-[A-Z0-9]{6})(\/status|\/rastreio|\/notificar)?$/);
   if (!m) return json({ erro: "Rota não encontrada." }, 404);

@@ -118,6 +118,22 @@ const NOMES_ACAO = {
   cancelado: "Cancelar pedido",
 };
 
+/** As prévias precisam da senha, então são baixadas aqui e mostradas como blob. */
+async function carregarPrevias(codigo) {
+  for (const img of main.querySelectorAll("[data-previa-img]")) {
+    const n = img.dataset.previaImg;
+    try {
+      const resp = await fetch(`api/admin/pedidos/${encodeURIComponent(codigo)}/previas/${n}`, { headers: { Authorization: `Bearer ${encodeURIComponent(lerSenha())}` }, cache: "no-store" });
+      if (!resp.ok) throw new Error(String(resp.status));
+      const url = URL.createObjectURL(await resp.blob());
+      img.src = url;
+      main.querySelector(`[data-previa-link="${n}"]`).href = url;
+    } catch {
+      img.replaceWith(Object.assign(document.createElement("span"), { textContent: "Não foi possível carregar a prévia." }));
+    }
+  }
+}
+
 async function telaPedido(codigo) {
   document.title = `${codigo} | Painel da loja`;
   main.innerHTML = `<p>Carregando pedido…</p>`;
@@ -151,7 +167,8 @@ async function telaPedido(codigo) {
             <tbody>${p.itens.map(i => `<tr><td><strong>${esc(i.produtoNome)}: ${esc(i.modeloNome)}</strong><br><small>${esc(i.dimensoes?.rotulo || "")}${i.personalizacaoTexto ? " · " + esc(i.personalizacaoTexto) : ""}</small></td><td class="num">${i.quantidade}</td><td class="num">${brl(i.precoUnitario, "A definir")}</td></tr>`).join("")}</tbody>
           </table></div>
           <p style="margin:10px 0 0"><strong>Total: ${brl(p.valores.total, "a definir")}</strong> · Entrega: ${esc(p.valores.frete != null ? brl(p.valores.frete) : p.valores.entregaMensagem)}</p>
-          ${p.itens.some(i => i.fonte === "upload") ? `<p class="aviso aviso-info" style="margin-top:10px"><strong>Imagens do cliente</strong>As imagens enviadas pelo cliente chegam pela conversa do WhatsApp da loja.</p>` : ""}
+          ${p.itens.some(i => i.previa) ? `<h3 style="font-size:1rem;margin:16px 0 8px">Prévias anexadas ao pedido</h3><div class="previas-pedido">${p.itens.map((i, n) => i.previa ? `<figure><a data-previa-link="${n}" download="${esc(p.codigo)}-item${n + 1}.jpg"><img data-previa-img="${n}" alt="Prévia do item ${n + 1}: ${esc(i.produtoNome)}, ${esc(i.modeloNome)}"></a><figcaption>Item ${n + 1}: ${esc(i.modeloNome)} · toque para baixar</figcaption></figure>` : "").join("")}</div>` : ""}
+          ${p.itens.some(i => i.fonte === "upload" && !i.previa) ? `<p class="aviso aviso-info" style="margin-top:10px"><strong>Imagens do cliente</strong>A prévia deste item não chegou pelo site. As imagens do cliente chegam pela conversa do WhatsApp da loja.</p>` : ""}
         </div>
         <div class="painel-caixa">
           <h2>Pagamento</h2>
@@ -195,6 +212,7 @@ async function telaPedido(codigo) {
     catch (err) { avisar(err.message); }
     telaPedido(p.codigo);
   }));
+  carregarPrevias(p.codigo);
   main.querySelector("[data-rastreio]")?.addEventListener("submit", async ev => {
     ev.preventDefault();
     const f = ev.target;

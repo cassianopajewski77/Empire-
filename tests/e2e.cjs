@@ -54,8 +54,8 @@ async function rotaApi(req, res) {
     },
   };
   const resp = await worker.fetch(new Request("http://loja.test" + req.url, { method: req.method, headers: req.headers.authorization ? { Authorization: req.headers.authorization } : {}, body: req.method === "POST" ? corpo : undefined }), env);
-  res.writeHead(resp.status, { "Content-Type": "application/json" });
-  res.end(await resp.text());
+  res.writeHead(resp.status, { "Content-Type": resp.headers.get("Content-Type") || "application/json" });
+  res.end(Buffer.from(await resp.arrayBuffer()));
 }
 
 function servidor() {
@@ -407,6 +407,19 @@ async function cenario(nome, fn) {
     assert.equal(pedido.cliente.aceitaWhatsApp, true);
     assert.equal((await env.PEDIDOS.instancia.obter(pedido.codigo)).status, "aguardando_pagamento");
     assert.equal((await itensCarrinho()).length, 0);
+    // a prévia do produto foi gerada e anexada ao pedido na loja
+    assert.equal(pedido.itens[0].previaEnviada, true);
+    assert.equal((await env.PEDIDOS.instancia.obter(pedido.codigo)).itens[0].previa, true);
+    const salva = await env.PEDIDOS.instancia.lerPrevia(pedido.codigo, 0);
+    assert.equal(salva.tipo, "image/jpeg");
+    await page.waitForFunction(() => { const i = document.querySelector("[data-previa-item='0'] img"); return i && i.complete && i.naturalWidth > 0; });
+    const prop = await page.$eval("[data-previa-item='0'] img", i => i.naturalWidth / i.naturalHeight);
+    assert.ok(prop > 1, "prévia na horizontal, como o mousepad");
+    assert.match(await page.textContent("[data-previa-item='0']"), /anexada ao pedido/);
+    if (whats) {
+      const texto = decodeURIComponent(await page.getAttribute("a:has-text('Enviar pedido pelo WhatsApp')", "href"));
+      assert.match(texto, new RegExp(`Prévia: http://127\\.0\\.0\\.1:\\d+/api/pedidos/${pedido.codigo}/previas/0\\?chave=${pedido.chave}`));
+    }
   });
 
   await cenario("CEP preenche o endereço automaticamente", async () => {
@@ -527,6 +540,16 @@ async function cenario(nome, fn) {
       return fetch("api/pedidos", { method: "POST", body: JSON.stringify(corpo) }).then(r => r.json());
     }, codigo);
     assert.ok(chave);
+    // prévia anexada pelo site do cliente
+    const envio = await page.evaluate(async ([codigo, chave]) => {
+      const c = document.createElement("canvas"); c.width = 300; c.height = 200;
+      const x = c.getContext("2d"); x.fillStyle = "#c00"; x.fillRect(0, 0, 300, 200);
+      const ok = await fetch(`api/pedidos/${codigo}/previas/0`, { method: "POST", body: JSON.stringify({ chave, imagem: c.toDataURL("image/jpeg") }) }).then(r => r.status);
+      const semChave = await fetch(`api/pedidos/${codigo}/previas/0`, { method: "POST", body: JSON.stringify({ chave: "x", imagem: c.toDataURL("image/jpeg") }) }).then(r => r.status);
+      const naoImagem = await fetch(`api/pedidos/${codigo}/previas/0`, { method: "POST", body: JSON.stringify({ chave, imagem: "data:image/jpeg;base64,PHN2Zz4=" }) }).then(r => r.status);
+      return [ok, semChave, naoImagem];
+    }, [codigo, chave]);
+    assert.deepEqual(envio, [201, 404, 400]);
     await page.goto(base + "painel.html");
     await page.fill("#senha", "errada");
     await page.click("button:has-text('Entrar')");
@@ -537,6 +560,7 @@ async function cenario(nome, fn) {
     assert.match(await page.textContent(".painel-lista"), /Maria Souza/);
     await page.click(`[data-pedido=${codigo}]`);
     await page.waitForSelector("text=Confirmar pagamento (conferi o Pix)");
+    await page.waitForFunction(() => { const i = document.querySelector("[data-previa-img='0']"); return i && i.complete && i.naturalWidth === 300; });
     assert.equal(await page.$("[data-rastreio]"), null, "rastreio só depois do pagamento");
     page.once("dialog", d => d.accept());
     await page.click("text=Confirmar pagamento (conferi o Pix)");

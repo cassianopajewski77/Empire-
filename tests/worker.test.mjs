@@ -313,6 +313,35 @@ test("mensagens: telefone no formato do WhatsApp e parâmetros sem quebra de lin
   assert.ok(await assinaturaValida("s", new Headers({ "x-signature": `ts=1,v1=${assinatura}`, "x-request-id": "r" }), "ABC"));
 });
 
+test("prévia anexada ao pedido: só com a chave do cliente, só imagem e a loja vê no painel", async () => {
+  const env = ambiente();
+  const criado = await (await chamar(env, "/api/pedidos", { metodo: "POST", corpo: pedidoBase() })).json();
+  const jpeg = "data:image/jpeg;base64," + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4, 0xff, 0xd9]).toString("base64");
+  const enviar = (corpo, n = 1) => chamar(env, `/api/pedidos/${criado.codigo}/previas/${n}`, { metodo: "POST", corpo });
+  assert.equal((await enviar({ chave: "errada", imagem: jpeg })).status, 404);
+  assert.equal((await enviar({ chave: criado.chave, imagem: "data:image/svg+xml;base64,PHN2Zz4=" })).status, 400);
+  assert.equal((await enviar({ chave: criado.chave, imagem: "data:image/png;base64," + Buffer.from("não é png").toString("base64") })).status, 400);
+  assert.equal((await enviar({ chave: criado.chave, imagem: "data:image/jpeg;base64," + "A".repeat(1_700_000) })).status, 400);
+  assert.equal((await enviar({ chave: criado.chave, imagem: jpeg }, 9)).status, 404);
+  assert.equal((await enviar({ chave: criado.chave, imagem: jpeg })).status, 201);
+
+  const pub = await chamar(env, `/api/pedidos/${criado.codigo}/previas/1?chave=${criado.chave}`);
+  assert.equal(pub.status, 200);
+  assert.equal(pub.headers.get("Content-Type"), "image/jpeg");
+  assert.deepEqual([...new Uint8Array(await pub.arrayBuffer())].slice(0, 3), [0xff, 0xd8, 0xff]);
+  assert.equal((await chamar(env, `/api/pedidos/${criado.codigo}/previas/1?chave=outra`)).status, 404);
+  assert.equal((await chamar(env, `/api/pedidos/${criado.codigo}/previas/0?chave=${criado.chave}`)).status, 404);
+
+  const semSenha = await chamar(env, `/api/admin/pedidos/${criado.codigo}/previas/1`);
+  assert.equal(semSenha.status, 401);
+  const adm = await admin(env, `/pedidos/${criado.codigo}/previas/1`);
+  assert.equal(adm.status, 200);
+  const pedido = await env.PEDIDOS.instancia.obter(criado.codigo);
+  assert.equal(pedido.itens[1].previa, true);
+  assert.equal(pedido.itens[0].previa, undefined);
+  assert.match(pedido.historico.at(-1).texto, /Prévia do item 2 recebida/);
+});
+
 test("rotas que não são da API servem os arquivos do site", async () => {
   const env = ambiente();
   assert.equal(await (await chamar(env, "/index.html")).text(), "arquivo /index.html");
