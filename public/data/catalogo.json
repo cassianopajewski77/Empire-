@@ -175,7 +175,8 @@
           "imagens": [],
           "previa": {}
         }
-      ]
+      ],
+      "material": "PVC"
     },
     {
       "id": "tapete-pet",
@@ -225,7 +226,8 @@
           }
         }
       ],
-      "imagemIlustrativa": "assets/vitrine/tapete-pet-ilustrativo.jpg"
+      "imagemIlustrativa": "assets/vitrine/tapete-pet-ilustrativo.jpg",
+      "material": "PVC"
     }
   ],
   "artes": [

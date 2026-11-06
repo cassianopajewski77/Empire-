@@ -78,7 +78,7 @@ function cartaoModelo(produto, modelo, rotaPersonalizar) {
     <article class="cartao">
       <div class="midia">${midiaModelo(produto, modelo, indice)}</div>
       <div class="corpo">
-        <span class="etiqueta">${esc(modelo.dimensoes?.rotulo || "")}</span>
+        <span class="etiqueta">${esc(modelo.dimensoes?.rotulo || "")}${produto.material ? ` · ${esc(produto.material)}` : ""}</span>
         <h3>${esc(modelo.nome)}</h3>
         <p>${esc(modelo.descricao || "Descrição em breve.")}</p>
         <p><small>${esc(disp)}</small></p>
@@ -126,7 +126,7 @@ function paginaInicio() {
             <div class="dobra-texto">
               <h2>${iconePet.replace("<svg ", '<svg class="icone" ')}<span>Comedouros <span class="destaque">Personalizados</span></span></h2>
               <p>Um cantinho especial para a hora da refeição, com o nome do seu pet e as cores que você escolher.</p>
-              <p class="medida">Tamanho: 40 × 60 cm · potes não inclusos</p>
+              <p class="medida">Tamanho: 40 × 60 cm · PVC · potes não inclusos</p>
               <a class="btn btn-primario" href="#/comedouros">Explorar Comedouros <span aria-hidden="true">→</span></a>
             </div>
           </article>
@@ -450,7 +450,7 @@ async function paginaPersonalizar(produtoId, modeloId, params = new URLSearchPar
     <div class="wrap cabecalho-pagina">
       <nav class="migalhas" aria-label="Você está em"><a href="#/catalogo">Catálogo</a> / ${migalhaPet} / ${esc(m.nome)}</nav>
       <h1>${esc(pet ? `Tapete com foto: ${m.nome}` : m.nome)}</h1>
-      <p>${esc(m.descricao || p.descricao)} <strong>${esc(m.dimensoes.rotulo)}</strong>.</p>
+      <p>${esc(m.descricao || p.descricao)} <strong>${esc(m.dimensoes.rotulo)}</strong>${p.material ? `, material: <strong>${esc(p.material)}</strong>` : ""}.</p>
     </div>
     <div class="wrap personalizador">
       <div class="previa-col" data-previa></div>
