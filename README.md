@@ -63,6 +63,7 @@ O produto `comedouro` em `catalogo.json` usa `personalizacao.tipo: "texto"`: o c
 - `modelos[0].preco`: o preço (hoje 69.9). Com `null`, aparece "Preço a definir" e o Pix não é gerado.
 - `modelos[0].dimensoes`: largura e altura em cm (hoje 60 × 40) e o `rotulo`; a prévia usa essa proporção. Para uma prévia provisória sem medida, use `previa.proporcao` e `previa.provisoria: true`.
 - `incluiPotes`: `true` (os potes acompanham), `false` (não acompanham, como hoje) ou `null` (o site pede para consultar a loja). Os potes na prévia são só ilustração e não entram no arquivo de impressão.
+- `material`: aparece na etiqueta dos modelos e na página de personalizar (hoje "PVC" no comedouro e no tapete com foto).
 - `imagemIlustrativa`: imagem de vitrine, sempre com o selo "Imagem ilustrativa". Troque por uma foto real quando houver.
 ## O que editar sem programar
 
